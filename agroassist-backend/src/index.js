@@ -2,8 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const db = require('./config/db');
+const authRoutes = require('./routes/auth.routes');
 
 app.use(express.json());
+app.use('/api/auth', authRoutes);
 
 console.log("DB_USER:", process.env.DB_USER);
 
