@@ -12,5 +12,10 @@ router.post('/register', [
   validateFields
 ], authController.register);
 
+router.post('/login',[
+  check('correo', 'Debes ingresar un correo válido').isEmail(),
+  check('contrasena', 'La contraseña es obligatoria').notEmpty(),
+  validateFields
+], authController.login);
 
 module.exports = router;
