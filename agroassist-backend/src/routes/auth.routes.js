@@ -18,4 +18,16 @@ router.post('/login',[
   validateFields
 ], authController.login);
 
+router.post('/recover-password',[
+  check('correo', 'El email es obligatorio').isEmail(),
+  validateFields
+], authController.recoverPassword)
+
+router.post('/reset-password', [
+  check('correo', 'El correo es obligatorio').isEmail(),
+  check('codigo', 'El código es obligatorio').notEmpty(),
+  check('newPassword', 'La contraseña debe tener al menos 6 caracteres').isLength({ min: 6 }),
+  validateFields
+], authController.resetPassword)
+
 module.exports = router;
