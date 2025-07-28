@@ -1,14 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const db = require('./config/db');
-const authRoutes = require('./routes/auth.routes');
+const db = require('./infrastructure/database/mysql/db');
+const authRoutes = require('./interfaces/routes/auth.routes');
+
 
 app.use(express.json());
+
+
 app.use('/api/auth', authRoutes);
 
-console.log("DB_USER:", process.env.DB_USER);
 
+console.log("DB_USER:", process.env.DB_USER);
 app.get('/ping', (req, res) => {
   db.query('SELECT 1 + 1 AS resultado', (err, results) => {
     if (err) {
@@ -17,6 +20,7 @@ app.get('/ping', (req, res) => {
     res.json({ mensaje: 'Conexión exitosa', resultado: results[0].resultado });
   });
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
