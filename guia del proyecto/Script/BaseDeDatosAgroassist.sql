@@ -58,6 +58,10 @@ ALTER TABLE usuarios
 ADD COLUMN reset_token VARCHAR(255),
 ADD COLUMN reset_token_expiration DATETIME;
 
+ALTER TABLE usuarios
+ADD COLUMN intentos_fallidos INT DEFAULT 0,
+ADD COLUMN bloqueado_hasta DATETIME DEFAULT NULL;
+
 SELECT * FROM roles;
 
 SELECT * FROM usuarios;
