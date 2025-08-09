@@ -34,27 +34,36 @@ app.get('/api', (req, res) => {
       },
       clima: {
         base_url: '/api/weather',
-        descripcion: 'Pronóstico del clima para los próximos 3 días',
+        descripcion: 'Pronóstico del clima para los próximos 3 días (requiere autenticación)',
+        autenticacion: 'Token JWT requerido',
         endpoints: [
-          'GET /api/weather/help',
-          'GET /api/weather/forecast?city=nombre&country=codigo',
-          'GET /api/weather/coordinates?lat=latitud&lon=longitud'
+          'GET /api/weather/help (público)',
+          'GET /api/weather/forecast?city=nombre&country=codigo (protegido)',
+          'GET /api/weather/coordinates?lat=latitud&lon=longitud (protegido)'
         ]
       },
       plagas: {
         base_url: '/api/pests',
-        descripcion: 'Información sobre plagas agrícolas por cultivo',
+        descripcion: 'Información sobre plagas agrícolas por cultivo (requiere autenticación)',
+        autenticacion: 'Token JWT requerido',
         endpoints: [
-          'GET /api/pests/help',
-          'GET /api/pests/crops',
-          'GET /api/pests/crop/:cultivo',
-          'POST /api/pests/symptoms'
+          'GET /api/pests/help (público)',
+          'GET /api/pests/crops (protegido)',
+          'GET /api/pests/crop/:cultivo (protegido)',
+          'POST /api/pests/symptoms (protegido)'
         ]
       }
     },
     configuracion_requerida: {
+      autenticacion: 'Todas las APIs principales requieren login previo y token JWT',
       clima: 'Necesitas configurar WEATHER_API_KEY en el archivo .env (obtén una clave gratuita en https://openweathermap.org/api)',
       base_datos: 'Configurar las variables de conexión a MySQL en el archivo .env'
+    },
+    como_usar: {
+      paso_1: 'Registrarse con POST /api/auth/register',
+      paso_2: 'Iniciar sesión con POST /api/auth/login para obtener token',
+      paso_3: 'Incluir token en header: Authorization: Bearer <tu_token>',
+      paso_4: 'Usar las APIs de clima y plagas con el token'
     },
     soporte: 'Para más información visita los endpoints /help de cada API'
   });

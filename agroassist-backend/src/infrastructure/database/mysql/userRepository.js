@@ -8,6 +8,14 @@ const findByEmail = async (correo) => {
   return rows[0];
 };
 
+const findById = async (id) => {
+  const [rows] = await db.promise().query(
+    'SELECT * FROM usuarios WHERE id = ?',
+    [id]
+  );
+  return rows[0];
+};
+
 const existsByEmail = async (correo) => {
   const [rows] = await db.promise().query(
     'SELECT id FROM usuarios WHERE correo = ?',
@@ -88,6 +96,7 @@ const resetLoginAttempts = async (id) => {
 
 module.exports = {
   findByEmail,
+  findById,
   existsByEmail,
   createUser,
   updateResetToken,

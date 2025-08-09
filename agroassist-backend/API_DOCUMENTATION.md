@@ -1,15 +1,88 @@
 # Documentación de APIs de AgroAssist
 
+## 🔐 Sistema de Autenticación
+
+**IMPORTANTE**: Las APIs de clima y plagas requieren autenticación JWT. Solo las rutas `/help` son públicas.
+
+### Flujo de Autenticación Requerido
+
+1. **Registrarse** (si no tienes cuenta)
+2. **Iniciar sesión** para obtener token JWT
+3. **Incluir token** en cada petición a las APIs protegidas
+
+---
+
+## 🚀 Guía de Uso Completa
+
+### Paso 1: Registro de Usuario
+```bash
+curl -X POST "http://localhost:3000/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre_completo": "Juan Agricultor",
+    "correo": "juan@email.com",
+    "contrasena": "mipassword123"
+  }'
+```
+
+### Paso 2: Iniciar Sesión
+```bash
+curl -X POST "http://localhost:3000/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "correo": "juan@email.com",
+    "contrasena": "mipassword123"
+  }'
+```
+
+**Respuesta:**
+```json
+{
+  "ok": true,
+  "msg": "Inicio de sesión exitoso",
+  "message": "Inicio de sesión exitoso",
+  "usuario": {
+    "id": 1,
+    "nombre": "Juan Agricultor",
+    "correo": "juan@email.com",
+    "rol": 2
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### Paso 3: Usar las APIs con Token
+
+**Guarda el token** recibido y úsalo en el header `Authorization` de todas las peticiones:
+
+```bash
+# Variable para el token (reemplaza con tu token real)
+TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# Consultar clima
+curl "http://localhost:3000/api/weather/forecast?city=Bogota" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Consultar plagas
+curl "http://localhost:3000/api/pests/crop/maiz" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
 ## Nuevas Funcionalidades Implementadas
 
 ### 1. API de Clima 🌤️
 
 Esta API proporciona pronósticos del clima para los próximos 3 días, útiles para la planificación agrícola.
 
+**🔒 REQUIERE AUTENTICACIÓN JWT**
+
 #### Configuración Requerida
 ```bash
 # En tu archivo .env
 WEATHER_API_KEY=tu_clave_de_openweathermap
+JWT_SECRET=tu_jwt_secret_muy_seguro
 ```
 
 **Obtener API Key Gratuita:**
@@ -21,16 +94,18 @@ WEATHER_API_KEY=tu_clave_de_openweathermap
 
 #### Endpoints Disponibles
 
-**GET /api/weather/help**
+**GET /api/weather/help** ✅ Público
 - Información completa sobre la API del clima
 
-**GET /api/weather/forecast**
+**GET /api/weather/forecast** 🔒 Requiere Token
+- Headers: `Authorization: Bearer <token>`
 - Parámetros:
   - `city` (requerido): Nombre de la ciudad
   - `country` (opcional): Código del país (2 letras)
 - Ejemplo: `/api/weather/forecast?city=Bogota&country=CO`
 
-**GET /api/weather/coordinates**
+**GET /api/weather/coordinates** 🔒 Requiere Token
+- Headers: `Authorization: Bearer <token>`
 - Parámetros:
   - `lat` (requerido): Latitud (-90 a 90)
   - `lon` (requerido): Longitud (-180 a 180)
@@ -62,6 +137,11 @@ WEATHER_API_KEY=tu_clave_de_openweathermap
         "probabilidad_lluvia": 2
       }
     ]
+  },
+  "usuario_consulta": {
+    "id": 1,
+    "nombre": "Juan Agricultor",
+    "correo": "juan@email.com"
   }
 }
 ```
@@ -72,20 +152,27 @@ WEATHER_API_KEY=tu_clave_de_openweathermap
 
 Esta API proporciona información sobre plagas comunes en diferentes cultivos agrícolas.
 
+**🔒 REQUIERE AUTENTICACIÓN JWT**
+
 #### Endpoints Disponibles
 
-**GET /api/pests/help**
+**GET /api/pests/help** ✅ Público
 - Información completa sobre la API de plagas
 
-**GET /api/pests/crops**
+**GET /api/pests/crops** 🔒 Requiere Token
+- Headers: `Authorization: Bearer <token>`
 - Lista todos los cultivos disponibles en la base de datos
 
-**GET /api/pests/crop/:cultivo**
+**GET /api/pests/crop/:cultivo** 🔒 Requiere Token
+- Headers: `Authorization: Bearer <token>`
 - Parámetros:
   - `cultivo`: Nombre del cultivo (maiz, tomate, arroz, papa, soja)
 - Ejemplo: `/api/pests/crop/maiz`
 
-**POST /api/pests/symptoms**
+**POST /api/pests/symptoms** 🔒 Requiere Token
+- Headers: 
+  - `Authorization: Bearer <token>`
+  - `Content-Type: application/json`
 - Body:
 ```json
 {
@@ -149,33 +236,72 @@ npm start
 
 ---
 
-## Ejemplos de Uso
+## Ejemplos de Uso Completos
 
 ### Clima - Pronóstico por Ciudad
 ```bash
-curl "http://localhost:3000/api/weather/forecast?city=Medellin&country=CO"
+# Con token obtenido del login
+curl "http://localhost:3000/api/weather/forecast?city=Medellin&country=CO" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 ### Clima - Pronóstico por Coordenadas
 ```bash
-curl "http://localhost:3000/api/weather/coordinates?lat=6.2442&lon=-75.5812"
+curl "http://localhost:3000/api/weather/coordinates?lat=6.2442&lon=-75.5812" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 ### Plagas - Información por Cultivo
 ```bash
-curl "http://localhost:3000/api/pests/crop/tomate"
+curl "http://localhost:3000/api/pests/crop/tomate" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 ### Plagas - Búsqueda por Síntomas
 ```bash
 curl -X POST "http://localhost:3000/api/pests/symptoms" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -H "Content-Type: application/json" \
   -d '{"symptoms": ["hojas amarillas", "perforaciones"]}'
 ```
 
 ### Obtener Lista de Cultivos
 ```bash
-curl "http://localhost:3000/api/pests/crops"
+curl "http://localhost:3000/api/pests/crops" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+---
+
+## 🔒 Manejo de Errores de Autenticación
+
+### Sin Token
+```json
+{
+  "success": false,
+  "message": "Token de acceso requerido",
+  "error": "No se proporcionó token de autorización",
+  "help": "Incluye el header: Authorization: Bearer <tu_token>"
+}
+```
+
+### Token Inválido o Expirado
+```json
+{
+  "success": false,
+  "message": "Token inválido o expirado",
+  "error": "Token invalido",
+  "help": "Inicia sesión nuevamente para obtener un token válido"
+}
+```
+
+### Cuenta Bloqueada
+```json
+{
+  "success": false,
+  "message": "Cuenta bloqueada temporalmente",
+  "error": "La cuenta está bloqueada. Intente más tarde."
+}
 ```
 
 ---

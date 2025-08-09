@@ -26,6 +26,13 @@ class WeatherController {
         return res.status(400).json(result);
       }
 
+      // Agregar información del usuario autenticado
+      result.usuario_consulta = {
+        id: req.user.id,
+        nombre: req.user.nombre,
+        correo: req.user.correo
+      };
+
       return res.status(200).json(result);
     } catch (error) {
       return res.status(500).json({
@@ -59,6 +66,13 @@ class WeatherController {
       if (!result.success) {
         return res.status(400).json(result);
       }
+
+      // Agregar información del usuario autenticado
+      result.usuario_consulta = {
+        id: req.user.id,
+        nombre: req.user.nombre,
+        correo: req.user.correo
+      };
 
       return res.status(200).json(result);
     } catch (error) {
