@@ -1,147 +1,90 @@
 -- ======================================================
--- BASE DE DATOS AGROASSIST - VERSIÓN ACTUALIZADA
--- Optimizada para APIs de Clima y Plagas
+-- SCRIPT DE MIGRACIÓN - SOLO ALTER TABLES
+-- Para actualizar base de datos existente sin perder datos
 -- ======================================================
 
--- Crear la base de datos
-CREATE DATABASE IF-- Vista de usuarios activos con estadísticas
-CREATE OR REPLACE VIEW vista_usuarios_activos AS
-SELECT 
-    u.id,
-    u.nombre_completo,
-    u.correo,
-    r.nombre as rol,
-    u.fecha_registro,
-    COALESCE(COUNT(ac.id), 0) as consultas_ultimo_mes,
-    cu.ciudad_predeterminada,
-    cu.unidad_temperatura
-FROM usuarios u
-LEFT JOIN roles r ON u.id_rol = r.id
-LEFT JOIN auditoria_consultas ac ON u.id = ac.id_usuario 
-    AND ac.fecha_consulta >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-LEFT JOIN configuraciones_usuario cu ON u.id = cu.id_usuario
-GROUP BY u.id;st_db;
 USE agroassist_db;
 
 -- ======================================================
--- TABLAS PRINCIPALES
+-- ALTER TABLES PARA ESQUEMA EXISTENTE
 -- ======================================================
 
--- Tabla de roles (usuario, admin, técnico, consultor)
-CREATE TABLE IF NOT EXISTS roles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL UNIQUE,
-    descripcion VARCHAR(200) NULL,
-    activo BOOLEAN DEFAULT TRUE,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- 1. TABLA USUARIOS - MANTENER COMO ESTÁ (NO MODIFICAR)
+-- La tabla usuarios ya funciona correctamente con:
+-- - reset_token, reset_token_expiration (para recuperación de contraseña)
+-- - intentos_fallidos, bloqueado_hasta (para control de login)
+-- 
+-- NO ejecutar ALTER TABLE usuarios - mantener funcionalidad existente
 
--- Tabla de usuarios (original funcionando)
-CREATE TABLE IF NOT EXISTS usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_completo VARCHAR(100) NOT NULL,
-    correo VARCHAR(100) NOT NULL UNIQUE,
-    contrasena VARCHAR(255) NOT NULL,
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    id_rol INT NOT NULL DEFAULT 2,
-    
-    -- Campos para seguridad y recuperación de contraseña (ya funcionando)
-    reset_token VARCHAR(255) NULL,
-    reset_token_expiration DATETIME NULL,
-    
-    -- Campos para control de intentos de login (ya funcionando)
-    intentos_fallidos INT DEFAULT 0,
-    bloqueado_hasta DATETIME NULL,
-    
-    FOREIGN KEY (id_rol) REFERENCES roles(id)
-);
+-- 2. MEJORAS EN TABLA CLIMA - Almacenar datos más ricos de la API
+ALTER TABLE clima 
+ADD COLUMN IF NOT EXISTS pais VARCHAR(3) NULL,
+ADD COLUMN IF NOT EXISTS latitud DECIMAL(10, 8) NULL,
+ADD COLUMN IF NOT EXISTS longitud DECIMAL(11, 8) NULL,
+ADD COLUMN IF NOT EXISTS temperatura_min DECIMAL(5,2) NULL,
+ADD COLUMN IF NOT EXISTS temperatura_max DECIMAL(5,2) NULL,
+ADD COLUMN IF NOT EXISTS viento_velocidad DECIMAL(5,2) NULL,
+ADD COLUMN IF NOT EXISTS viento_direccion VARCHAR(10) NULL,
+ADD COLUMN IF NOT EXISTS presion DECIMAL(7,2) NULL,
+ADD COLUMN IF NOT EXISTS visibilidad INT NULL,
+ADD COLUMN IF NOT EXISTS indice_uv DECIMAL(3,1) NULL,
+ADD COLUMN IF NOT EXISTS precipitacion DECIMAL(5,2) NULL,
+ADD COLUMN IF NOT EXISTS icono_clima VARCHAR(10) NULL,
+ADD COLUMN IF NOT EXISTS fuente_api VARCHAR(50) DEFAULT 'openweathermap',
+ADD COLUMN IF NOT EXISTS datos_json TEXT NULL;
 
--- Tabla de cultivos (información completa)
-CREATE TABLE IF NOT EXISTS cultivos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_cultivo VARCHAR(100) NOT NULL,
-    nombre_cientifico VARCHAR(150) NULL,
-    descripcion TEXT NULL,
-    ciclo_cultivo INT NULL COMMENT 'días del ciclo completo',
-    temporada_siembra VARCHAR(100) NULL,
-    temporada_cosecha VARCHAR(100) NULL,
-    requerimientos_clima TEXT NULL,
-    zona VARCHAR(100) NULL,
-    temporada VARCHAR(50) NULL,
-    activo BOOLEAN DEFAULT TRUE,
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
-    INDEX idx_nombre (nombre_cultivo),
-    INDEX idx_activo (activo)
-);
+-- Agregar índices para tabla clima
+ALTER TABLE clima 
+ADD INDEX IF NOT EXISTS idx_clima_ciudad_fecha (ciudad, fecha),
+ADD INDEX IF NOT EXISTS idx_clima_usuario_fecha (id_usuario, fecha),
+ADD INDEX IF NOT EXISTS idx_clima_coordenadas (latitud, longitud);
 
--- Tabla de plagas (información estructurada)
-CREATE TABLE IF NOT EXISTS plagas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    tipo_plaga VARCHAR(100) NOT NULL,
-    nombre_cientifico VARCHAR(150) NULL,
-    descripcion TEXT NULL,
-    cultivo_afectado VARCHAR(100) NULL,
-    nivel_dano ENUM('Bajo', 'Medio', 'Alto') DEFAULT 'Medio',
-    periodo_critico VARCHAR(100) NULL,
-    sintomas TEXT NULL,
-    metodos_control TEXT NULL,
-    recomendaciones TEXT NULL,
-    activa BOOLEAN DEFAULT TRUE,
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    id_usuario INT NULL,
-    
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
-    INDEX idx_tipo (tipo_plaga),
-    INDEX idx_cultivo (cultivo_afectado),
-    INDEX idx_nivel (nivel_dano),
-    INDEX idx_activa (activa)
-);
+-- 3. MEJORAS EN TABLA PLAGAS
+ALTER TABLE plagas 
+ADD COLUMN IF NOT EXISTS nombre_cientifico VARCHAR(150) NULL,
+ADD COLUMN IF NOT EXISTS cultivo_afectado VARCHAR(100) NULL,
+ADD COLUMN IF NOT EXISTS nivel_dano ENUM('Bajo', 'Medio', 'Alto') DEFAULT 'Medio',
+ADD COLUMN IF NOT EXISTS periodo_critico VARCHAR(100) NULL,
+ADD COLUMN IF NOT EXISTS sintomas TEXT NULL,
+ADD COLUMN IF NOT EXISTS metodos_control TEXT NULL,
+ADD COLUMN IF NOT EXISTS activa BOOLEAN DEFAULT TRUE;
 
--- Tabla de datos meteorológicos (mejorada para API)
-CREATE TABLE IF NOT EXISTS clima (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    ciudad VARCHAR(100) NOT NULL,
-    pais VARCHAR(3) NULL,
-    latitud DECIMAL(10, 8) NULL,
-    longitud DECIMAL(11, 8) NULL,
-    
-    -- Temperaturas
-    temperatura DECIMAL(5,2) NULL,
-    temperatura_min DECIMAL(5,2) NULL,
-    temperatura_max DECIMAL(5,2) NULL,
-    
-    -- Otros parámetros climáticos
-    humedad INT NULL,
-    presion DECIMAL(7,2) NULL,
-    viento_velocidad DECIMAL(5,2) NULL,
-    viento_direccion VARCHAR(10) NULL,
-    visibilidad INT NULL,
-    indice_uv DECIMAL(3,1) NULL,
-    precipitacion DECIMAL(5,2) NULL,
-    
-    -- Información descriptiva
-    descripcion VARCHAR(255) NULL,
-    icono_clima VARCHAR(10) NULL,
-    
-    -- Metadatos
-    fuente_api VARCHAR(50) DEFAULT 'openweathermap',
-    datos_json TEXT NULL,
-    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-    id_usuario INT NULL,
-    
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
-    INDEX idx_ciudad_fecha (ciudad, fecha),
-    INDEX idx_usuario_fecha (id_usuario, fecha),
-    INDEX idx_coordenadas (latitud, longitud),
-    INDEX idx_fecha (fecha)
-);
+-- Renombrar columna si existe (compatibilidad)
+-- ALTER TABLE plagas CHANGE COLUMN descripcion descripcion TEXT NULL;
+-- ALTER TABLE plagas CHANGE COLUMN recomendaciones metodos_control TEXT NULL;
+
+-- Agregar índices para tabla plagas
+ALTER TABLE plagas 
+ADD INDEX IF NOT EXISTS idx_plagas_tipo (tipo_plaga),
+ADD INDEX IF NOT EXISTS idx_plagas_cultivo (cultivo_afectado),
+ADD INDEX IF NOT EXISTS idx_plagas_nivel (nivel_dano),
+ADD INDEX IF NOT EXISTS idx_plagas_activa (activa);
+
+-- 4. MEJORAS EN TABLA CULTIVOS
+ALTER TABLE cultivos 
+ADD COLUMN IF NOT EXISTS nombre_cientifico VARCHAR(150) NULL,
+ADD COLUMN IF NOT EXISTS ciclo_cultivo INT NULL COMMENT 'días del ciclo completo',
+ADD COLUMN IF NOT EXISTS temporada_siembra VARCHAR(100) NULL,
+ADD COLUMN IF NOT EXISTS temporada_cosecha VARCHAR(100) NULL,
+ADD COLUMN IF NOT EXISTS requerimientos_clima TEXT NULL,
+ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE;
+
+-- Agregar índices para tabla cultivos
+ALTER TABLE cultivos 
+ADD INDEX IF NOT EXISTS idx_cultivos_nombre (nombre_cultivo),
+ADD INDEX IF NOT EXISTS idx_cultivos_activo (activo);
+
+-- 5. ACTUALIZAR TABLA ROLES
+ALTER TABLE roles 
+ADD COLUMN IF NOT EXISTS descripcion VARCHAR(200) NULL,
+ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE,
+ADD COLUMN IF NOT EXISTS fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP;
 
 -- ======================================================
--- TABLAS AUXILIARES PARA FUNCIONALIDADES AVANZADAS
+-- NUEVAS TABLAS (solo si no existen)
 -- ======================================================
 
--- Tabla de relación cultivos-plagas
+-- 6. TABLA DE RELACIÓN CULTIVOS-PLAGAS
 CREATE TABLE IF NOT EXISTS cultivos_plagas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_cultivo INT NOT NULL,
@@ -151,13 +94,12 @@ CREATE TABLE IF NOT EXISTS cultivos_plagas (
     metodos_prevencion TEXT NULL,
     activo BOOLEAN DEFAULT TRUE,
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
     FOREIGN KEY (id_cultivo) REFERENCES cultivos(id) ON DELETE CASCADE,
     FOREIGN KEY (id_plaga) REFERENCES plagas(id) ON DELETE CASCADE,
     UNIQUE KEY unique_cultivo_plaga (id_cultivo, id_plaga)
 );
 
--- Tabla de configuraciones de usuario
+-- 7. TABLA DE CONFIGURACIONES DE USUARIO
 CREATE TABLE IF NOT EXISTS configuraciones_usuario (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -172,12 +114,11 @@ CREATE TABLE IF NOT EXISTS configuraciones_usuario (
     limite_consultas_diarias INT DEFAULT 100,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
     UNIQUE KEY unique_user_config (id_usuario)
 );
 
--- Tabla de auditoría de consultas API
+-- 8. TABLA DE AUDITORÍA DE CONSULTAS API
 CREATE TABLE IF NOT EXISTS auditoria_consultas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -190,14 +131,12 @@ CREATE TABLE IF NOT EXISTS auditoria_consultas (
     codigo_respuesta INT NULL,
     tiempo_respuesta_ms INT NULL,
     fecha_consulta DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
     INDEX idx_usuario_fecha (id_usuario, fecha_consulta),
-    INDEX idx_tipo_fecha (tipo_api, fecha_consulta),
-    INDEX idx_fecha (fecha_consulta)
+    INDEX idx_tipo_fecha (tipo_api, fecha_consulta)
 );
 
--- Tabla de ubicaciones favoritas para clima
+-- 9. TABLA DE UBICACIONES FAVORITAS PARA CLIMA
 CREATE TABLE IF NOT EXISTS clima_favoritos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -208,12 +147,11 @@ CREATE TABLE IF NOT EXISTS clima_favoritos (
     longitud DECIMAL(11, 8) NULL,
     activo BOOLEAN DEFAULT TRUE,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
     INDEX idx_usuario_activo (id_usuario, activo)
 );
 
--- Tabla de alertas agrícolas
+-- 10. TABLA DE ALERTAS AGRÍCOLAS
 CREATE TABLE IF NOT EXISTS alertas_agricolas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -225,24 +163,32 @@ CREATE TABLE IF NOT EXISTS alertas_agricolas (
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     fecha_expiracion DATETIME NULL,
     datos_adicionales JSON NULL,
-    
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
     INDEX idx_usuario_fecha (id_usuario, fecha_creacion),
     INDEX idx_no_leidas (id_usuario, leida, fecha_creacion)
 );
 
 -- ======================================================
--- DATOS INICIALES
+-- ACTUALIZAR DATOS EXISTENTES
 -- ======================================================
 
--- Insertar roles
+-- Actualizar roles existentes (solo si no están actualizados)
+UPDATE roles SET descripcion = 'Administrador del sistema con acceso completo' WHERE id = 1 AND descripcion IS NULL;
+UPDATE roles SET descripcion = 'Usuario agricultor con acceso a consultas de clima y plagas' WHERE id = 2 AND descripcion IS NULL;
+
+-- Agregar nuevos roles si no existen
 INSERT IGNORE INTO roles (id, nombre, descripcion) VALUES 
-(1, 'administrador', 'Administrador del sistema con acceso completo'),
-(2, 'agricultor', 'Usuario agricultor con acceso a consultas de clima y plagas'),
 (3, 'tecnico_agricola', 'Técnico agrícola con permisos avanzados'),
 (4, 'consultor', 'Consultor agrícola especializado');
 
--- Insertar cultivos principales
+-- Actualizar usuarios existentes - NO TOCAR (mantener funcionalidad)
+-- La tabla usuarios ya funciona correctamente
+
+-- ======================================================
+-- INSERTAR DATOS INICIALES (solo si las tablas están vacías)
+-- ======================================================
+
+-- Insertar cultivos principales (solo si no existen)
 INSERT IGNORE INTO cultivos (id, nombre_cultivo, nombre_cientifico, descripcion, ciclo_cultivo, activo) VALUES
 (1, 'Maíz', 'Zea mays', 'Cereal básico de gran importancia alimentaria', 120, TRUE),
 (2, 'Tomate', 'Solanum lycopersicum', 'Fruto de gran valor comercial y nutricional', 90, TRUE),
@@ -253,7 +199,7 @@ INSERT IGNORE INTO cultivos (id, nombre_cultivo, nombre_cientifico, descripcion,
 (7, 'Café', 'Coffea arabica', 'Cultivo perenne de exportación', 365, TRUE),
 (8, 'Plátano', 'Musa paradisiaca', 'Fruta tropical de consumo masivo', 270, TRUE);
 
--- Insertar plagas principales
+-- Insertar plagas principales (solo si no existen)
 INSERT IGNORE INTO plagas (id, tipo_plaga, nombre_cientifico, descripcion, cultivo_afectado, nivel_dano, sintomas, metodos_control, activa) VALUES
 (1, 'Gusano cogollero', 'Spodoptera frugiperda', 'Larva que ataca hojas tiernas del maíz', 'Maíz', 'Alto', 'Hojas perforadas, excremento granular, plantas debilitadas', 'Control biológico con Trichogramma, Bt, feromonas', TRUE),
 (2, 'Mosca blanca', 'Bemisia tabaci', 'Insecto transmisor de virus en tomate', 'Tomate', 'Alto', 'Hojas amarillas, melaza pegajosa, transmisión de virus', 'Trampas amarillas, control biológico, insecticidas específicos', TRUE),
@@ -261,7 +207,7 @@ INSERT IGNORE INTO plagas (id, tipo_plaga, nombre_cientifico, descripcion, culti
 (4, 'Polilla de la papa', 'Phthorimaea operculella', 'Ataca tubérculos y hojas de papa', 'Papa', 'Alto', 'Galerías en tubérculos, hojas minadas, tubérculos no comerciales', 'Aporque adecuado, cosecha oportuna, almacenamiento', TRUE),
 (5, 'Oruga de las leguminosas', 'Anticarsia gemmatalis', 'Larva defoliadora de soja', 'Soja', 'Medio', 'Defoliación, reducción del área foliar, menor rendimiento', 'Insecticidas específicos, control biológico con virus', TRUE);
 
--- Crear relaciones cultivos-plagas
+-- Crear relaciones cultivos-plagas (solo si no existen)
 INSERT IGNORE INTO cultivos_plagas (id_cultivo, id_plaga, nivel_susceptibilidad, periodo_mayor_riesgo) VALUES
 (1, 1, 'Alto', 'Primeras 6 semanas después de siembra'),
 (2, 2, 'Alto', 'Todo el ciclo del cultivo'),
@@ -270,20 +216,19 @@ INSERT IGNORE INTO cultivos_plagas (id_cultivo, id_plaga, nivel_susceptibilidad,
 (5, 5, 'Medio', 'Floración y llenado de vainas');
 
 -- ======================================================
--- VISTAS ÚTILES
+-- CREAR VISTAS (reemplazar si existen)
 -- ======================================================
 
--- Vista de usuarios activos con estadísticas
-CREATE OR REPLACE VIEW vista_usuarios_activos AS
+-- Vista de usuarios activos con estadísticas (compatible con tabla original)
+DROP VIEW IF EXISTS vista_usuarios_activos;
+CREATE VIEW vista_usuarios_activos AS
 SELECT 
     u.id,
     u.nombre_completo,
     u.correo,
     r.nombre as rol,
     u.fecha_registro,
-    u.ultimo_acceso,
-    u.activo,
-    COUNT(ac.id) as consultas_ultimo_mes,
+    COALESCE(COUNT(ac.id), 0) as consultas_ultimo_mes,
     cu.ciudad_predeterminada,
     cu.unidad_temperatura
 FROM usuarios u
@@ -291,11 +236,11 @@ LEFT JOIN roles r ON u.id_rol = r.id
 LEFT JOIN auditoria_consultas ac ON u.id = ac.id_usuario 
     AND ac.fecha_consulta >= DATE_SUB(NOW(), INTERVAL 30 DAY)
 LEFT JOIN configuraciones_usuario cu ON u.id = cu.id_usuario
-WHERE u.activo = TRUE
-GROUP BY u.id;
+GROUP BY u.id, u.nombre_completo, u.correo, r.nombre, u.fecha_registro, cu.ciudad_predeterminada, cu.unidad_temperatura;
 
 -- Vista de cultivos con sus plagas
-CREATE OR REPLACE VIEW vista_cultivos_plagas AS
+DROP VIEW IF EXISTS vista_cultivos_plagas;
+CREATE VIEW vista_cultivos_plagas AS
 SELECT 
     c.id as cultivo_id,
     c.nombre_cultivo,
@@ -314,13 +259,28 @@ WHERE c.activo = TRUE
 ORDER BY c.nombre_cultivo, cp.nivel_susceptibilidad DESC;
 
 -- ======================================================
--- COMANDOS DE VERIFICACIÓN
+-- COMANDOS DE VERIFICACIÓN FINAL
 -- ======================================================
 
--- Mostrar todas las tablas
-SHOW TABLES;
+-- Verificar estructura actualizada
+SELECT 
+    'TABLA' as tipo,
+    TABLE_NAME as nombre,
+    TABLE_ROWS as registros
+FROM information_schema.TABLES 
+WHERE TABLE_SCHEMA = 'agroassist_db' 
+ORDER BY TABLE_NAME;
 
--- Verificar datos iniciales
+-- Verificar nuevas columnas en usuarios
+DESCRIBE usuarios;
+
+-- Verificar nuevas columnas en clima  
+DESCRIBE clima;
+
+-- Verificar nuevas columnas en plagas
+DESCRIBE plagas;
+
+-- Verificar datos
 SELECT 'ROLES' as tabla, COUNT(*) as registros FROM roles
 UNION ALL
 SELECT 'USUARIOS' as tabla, COUNT(*) as registros FROM usuarios
@@ -329,7 +289,11 @@ SELECT 'CULTIVOS' as tabla, COUNT(*) as registros FROM cultivos
 UNION ALL
 SELECT 'PLAGAS' as tabla, COUNT(*) as registros FROM plagas
 UNION ALL
-SELECT 'CULTIVOS_PLAGAS' as tabla, COUNT(*) as registros FROM cultivos_plagas;
+SELECT 'CULTIVOS_PLAGAS' as tabla, COUNT(*) as registros FROM cultivos_plagas
+UNION ALL
+SELECT 'AUDITORIA_CONSULTAS' as tabla, COUNT(*) as registros FROM auditoria_consultas;
+
+-- Mensaje final
+SELECT 'MIGRACIÓN COMPLETADA EXITOSAMENTE' as resultado, NOW() as fecha_ejecucion;
 
 COMMIT;
-

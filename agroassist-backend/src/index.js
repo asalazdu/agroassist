@@ -5,6 +5,7 @@ const db = require('./infrastructure/database/mysql/db');
 const authRoutes = require('./interfaces/routes/auth.routes');
 const weatherRoutes = require('./interfaces/routes/weather.routes');
 const pestRoutes = require('./interfaces/routes/pest.routes');
+const chatbotRoutes = require('./interfaces/routes/chatbot.routes');
 
 
 app.use(express.json());
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/pests', pestRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Ruta principal de información
 app.get('/api', (req, res) => {
@@ -52,18 +54,34 @@ app.get('/api', (req, res) => {
           'GET /api/pests/crop/:cultivo (protegido)',
           'POST /api/pests/symptoms (protegido)'
         ]
+      },
+      chatbot: {
+        base_url: '/api/chatbot',
+        descripcion: 'Asistente agrícola inteligente con IA para recomendaciones personalizadas (requiere autenticación)',
+        autenticacion: 'Token JWT requerido',
+        inteligencia_artificial: 'Utiliza OpenAI para recomendaciones avanzadas (requiere OPENAI_API_KEY)',
+        endpoints: [
+          'GET /api/chatbot/capabilities (público)',
+          'GET /api/chatbot/health (público)',
+          'POST /api/chatbot/message (protegido)',
+          'GET /api/chatbot/suggestions (protegido)',
+          'GET /api/chatbot/history (protegido)',
+          'POST /api/chatbot/feedback (protegido)'
+        ]
       }
     },
     configuracion_requerida: {
       autenticacion: 'Todas las APIs principales requieren login previo y token JWT',
       clima: 'Necesitas configurar WEATHER_API_KEY en el archivo .env (obtén una clave gratuita en https://openweathermap.org/api)',
+      chatbot_ia: 'Para funcionalidad completa de IA, configura OPENAI_API_KEY en el archivo .env (obtén una clave en https://platform.openai.com/)',
       base_datos: 'Configurar las variables de conexión a MySQL en el archivo .env'
     },
     como_usar: {
       paso_1: 'Registrarse con POST /api/auth/register',
       paso_2: 'Iniciar sesión con POST /api/auth/login para obtener token',
       paso_3: 'Incluir token en header: Authorization: Bearer <tu_token>',
-      paso_4: 'Usar las APIs de clima y plagas con el token'
+      paso_4: 'Usar las APIs de clima, plagas y chatbot con el token',
+      paso_5: 'Para el chatbot: envía mensajes a POST /api/chatbot/message'
     },
     soporte: 'Para más información visita los endpoints /help de cada API'
   });
