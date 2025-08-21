@@ -1,32 +1,28 @@
-const { Router } = require('express');
-const { param, body } = require('express-validator');
-const { validateFields } = require('../middlewares/validateFields');
+const express = require('express');
+const PestController = require('../controllers/pest.controller');
 const { validateJWT } = require('../middlewares/validateJWT');
-const pestController = require('../controllers/pest.controller');
 
-const router = Router();
+const router = express.Router();
+const pestController = new PestController();
 
-// Ruta para obtener ayuda sobre la API de plagas
-router.get('/help', pestController.getHelp);
+/**
+ * Rutas para información de plagas y cultivos
+ * Todas las APIs utilizadas son completamente GRATUITAS
+ */
 
-// Ruta para obtener cultivos disponibles
-router.get('/crops', [
-  validateJWT
-], pestController.getAvailableCrops);
+// Endpoint de prueba (público para verificar APIs)
+router.get('/test', pestController.testAPIs.bind(pestController));
 
-// Ruta para obtener plagas por cultivo
-router.get('/crop/:crop', [
-  validateJWT,
-  param('crop', 'El nombre del cultivo es requerido').notEmpty(),
-  validateFields
-], pestController.getPestsByCrop);
+// Buscar información general de una plaga específica
+router.get('/search/:pestName', validateJWT, pestController.searchPest.bind(pestController));
 
-// Ruta para buscar plagas por síntomas
-router.post('/symptoms', [
-  validateJWT,
-  body('symptoms', 'Se requiere un array de síntomas').isArray({ min: 1 }),
-  body('symptoms.*', 'Cada síntoma debe ser un string no vacío').isString().notEmpty(),
-  validateFields
-], pestController.getPestsBySymptoms);
+// Obtener plagas asociadas a un cultivo
+router.get('/crop/:cropName', validateJWT, pestController.getCropPests.bind(pestController));
+
+// Buscar plagas por ubicación geográfica
+router.post('/location', validateJWT, pestController.getPestsByLocation.bind(pestController));
+
+// Obtener información detallada de una plaga
+router.post('/details', validateJWT, pestController.getDetailedPestInfo.bind(pestController));
 
 module.exports = router;

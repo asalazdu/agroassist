@@ -9,7 +9,7 @@ Este repositorio contiene el código fuente del backend de **AgroAssist**, una a
 - **Express.js** - Framework web para la creación de la API REST.
 - **MySQL** - Motor de base de datos relacional.
 - **JWT (JSON Web Tokens)** - Para autenticación de usuarios.
-- **Rasa** - Plataforma de IA para construcción del chatbot.
+
 - **RESTful APIs** - Consumo de servicios externos (clima, precios, plagas).
 
 ## 📁 Estructura del proyecto (prevista)
@@ -36,7 +36,7 @@ agroassist-backend/
   - Consulta de clima actual y pronóstico (OpenWeatherMap, Weatherstack).
   - Consulta de precios del mercado (Agrodata, Agromática).
   - Información sobre plagas y su control (Agri-Tech).
-  - Interacción con el chatbot basado en Rasa.
+
 - Preparado para respuestas por texto y voz (integración con frontend por API).
 
 ## 🔐 Contexto legal y normativo
