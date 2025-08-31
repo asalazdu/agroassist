@@ -1,10 +1,11 @@
 const gbifService = require('./gbifService');
 const iNaturalistService = require('./iNaturalistService');
 const usdaService = require('./usdaService');
+const colombianAgricultureService = require('./colombianAgricultureService');
 
 /**
  * Servicio integrador para información de plagas y cultivos
- * Combina datos de GBIF, iNaturalist y USDA
+ * Combina datos de GBIF, iNaturalist, USDA + información especializada de Colombia
  * TODAS LAS APIs SON COMPLETAMENTE GRATUITAS
  */
 class PestInformationService {
@@ -14,69 +15,93 @@ class PestInformationService {
       iNaturalist: iNaturalistService,
       usda: usdaService
     };
+    this.colombianService = colombianAgricultureService;
   }
 
   /**
-   * Búsqueda completa de información sobre una plaga
-   * @param {string} pestName - Nombre de la plaga
-   * @returns {Promise<Object>} - Información completa de múltiples fuentes
+   * Búsqueda completa de información sobre una plaga con enfoque colombiano
+   * @param {string} pestName - Nombre de la plaga en español o inglés
+   * @returns {Promise<Object>} - Información completa de múltiples fuentes + info colombiana
    */
   async getCompletePestInfo(pestName) {
     try {
-      // Búsqueda paralela en todas las APIs
+      // Traducir al inglés para APIs internacionales
+      const englishName = this._translateToEnglish(pestName);
+      
+      // Buscar en base de datos colombiana primero
+      const colombianInfo = this.colombianService.getPestInfo(pestName);
+      
+      // Búsqueda paralela en APIs internacionales
       const [gbifResults, iNatResults] = await Promise.all([
-        this.services.gbif.searchPests(pestName),
-        this.services.iNaturalist.searchInsectPests(pestName)
+        this.services.gbif.searchPests(englishName),
+        this.services.iNaturalist.searchInsectPests(englishName)
       ]);
+
+      // Traducir resultados al español
+      const translatedResults = this._translateResults(gbifResults, iNatResults);
 
       return {
         success: true,
-        query: pestName,
-        sources: {
-          gbif: gbifResults,
-          iNaturalist: iNatResults
+        consulta: pestName,
+        informacion_colombiana: colombianInfo || null,
+        fuentes_internacionales: {
+          gbif: translatedResults.gbif,
+          iNaturalist: translatedResults.iNaturalist
         },
-        summary: {
-          totalResults: (gbifResults.data?.length || 0) + (iNatResults.data?.length || 0),
-          scientificMatches: this._findCommonSpecies(gbifResults.data, iNatResults.data)
-        }
+        resumen: {
+          total_resultados: (gbifResults.data?.length || 0) + (iNatResults.data?.length || 0),
+          coincidencias_cientificas: this._findCommonSpecies(gbifResults.data, iNatResults.data),
+          informacion_local_disponible: !!colombianInfo
+        },
+        recomendaciones: this._generateColombianRecommendations(pestName, colombianInfo)
       };
     } catch (error) {
       console.error('Error en búsqueda completa de plagas:', error);
       return {
         success: false,
         error: 'Error al obtener información completa de la plaga',
-        details: error.message
+        detalles: error.message
       };
     }
   }
 
   /**
-   * Obtener información específica de cultivos y sus plagas comunes
-   * @param {string} cropName - Nombre del cultivo
-   * @returns {Promise<Object>} - Información del cultivo y plagas asociadas
+   * Obtener información específica de cultivos colombianos y sus plagas
+   * @param {string} cropName - Nombre del cultivo en español
+   * @returns {Promise<Object>} - Información del cultivo y plagas asociadas en Colombia
    */
   async getCropPestInfo(cropName) {
     try {
-      // Buscar información del cultivo en USDA
-      const cropData = await this.services.usda.getCropProduction(cropName);
+      // Información del cultivo en Colombia
+      const cropInfo = this.colombianService.getCropInfo(cropName);
       
-      // Buscar plagas comunes asociadas a este cultivo
-      const commonPests = await this._getCommonCropPests(cropName);
+      // Plagas específicas del cultivo en Colombia
+      const colombianPests = this.colombianService.getPestsByCrop(cropName);
+      
+      // Traducir nombre del cultivo para APIs internacionales
+      const englishCropName = this._translateCropToEnglish(cropName);
+      
+      // Buscar información adicional en USDA
+      const cropData = await this.services.usda.getCropProduction(englishCropName);
+      
+      // Buscar plagas comunes en APIs internacionales
+      const commonPests = await this._getCommonCropPests(englishCropName);
 
       return {
         success: true,
-        crop: cropName,
-        productionData: cropData,
-        commonPests: commonPests,
-        recommendations: this._generatePestRecommendations(cropName, commonPests)
+        cultivo: cropName,
+        informacion_cultivo_colombia: cropInfo,
+        plagas_principales_colombia: colombianPests,
+        datos_produccion_internacional: cropData,
+        plagas_internacionales: commonPests,
+        recomendaciones: this._generateColombianCropRecommendations(cropName, cropInfo, colombianPests)
       };
     } catch (error) {
       console.error('Error al obtener información de cultivo:', error);
       return {
         success: false,
         error: 'Error al obtener información del cultivo',
-        details: error.message
+        detalles: error.message
       };
     }
   }
@@ -355,6 +380,159 @@ class PestInformationService {
     };
 
     return recommendations[riskLevel] || recommendations['LOW'];
+  }
+
+  /**
+   * Traducir términos de plagas del español al inglés
+   * @private
+   */
+  _translateToEnglish(spanishTerm) {
+    const translations = {
+      'broca del cafe': 'coffee borer',
+      'broca': 'borer',
+      'roya del cafe': 'coffee rust',
+      'roya': 'rust',
+      'gusano cogollero': 'armyworm',
+      'cogollero': 'armyworm',
+      'sigatoka negra': 'black sigatoka',
+      'sigatoka': 'sigatoka',
+      'sogata': 'rice planthopper',
+      'pulgon': 'aphid',
+      'pulgones': 'aphids',
+      'trips': 'thrips',
+      'mosca blanca': 'whitefly',
+      'acaro': 'spider mite',
+      'chinche': 'bug',
+      'barrenador': 'borer',
+      'polilla': 'moth',
+      'escoba de bruja': 'witches broom',
+      'monilia': 'monilia',
+      'mazorca negra': 'black pod'
+    };
+
+    return translations[spanishTerm.toLowerCase()] || spanishTerm;
+  }
+
+  /**
+   * Traducir nombres de cultivos del español al inglés
+   * @private
+   */
+  _translateCropToEnglish(spanishCrop) {
+    const translations = {
+      'cafe': 'coffee',
+      'maiz': 'corn',
+      'arroz': 'rice',
+      'platano': 'banana',
+      'papa': 'potato',
+      'frijol': 'bean',
+      'cacao': 'cacao',
+      'yuca': 'cassava',
+      'cana de azucar': 'sugarcane',
+      'flores': 'flowers'
+    };
+
+    return translations[spanishCrop.toLowerCase()] || spanishCrop;
+  }
+
+  /**
+   * Traducir resultados de APIs al español
+   * @private
+   */
+  _translateResults(gbifResults, iNatResults) {
+    const translateSpeciesData = (data) => {
+      if (!data || !Array.isArray(data)) return data;
+
+      return data.map(item => ({
+        ...item,
+        nombre_comun: this.colombianService.translateToSpanish(item.commonName || ''),
+        reino: item.kingdom === 'Animalia' ? 'Animal' : item.kingdom,
+        filo: item.phylum,
+        clase: item.class,
+        orden: item.order,
+        familia: item.family
+      }));
+    };
+
+    return {
+      gbif: {
+        ...gbifResults,
+        data: translateSpeciesData(gbifResults.data)
+      },
+      iNaturalist: {
+        ...iNatResults,
+        data: translateSpeciesData(iNatResults.data)
+      }
+    };
+  }
+
+  /**
+   * Generar recomendaciones específicas para Colombia
+   * @private
+   */
+  _generateColombianRecommendations(pestName, colombianInfo) {
+    const recommendations = [];
+
+    if (colombianInfo) {
+      recommendations.push('✅ Información específica de Colombia disponible');
+      recommendations.push(`📍 Regiones problemáticas: ${colombianInfo.regiones_problematicas?.join(', ')}`);
+      recommendations.push(`🌱 Cultivos afectados: ${colombianInfo.cultivos_afectados?.join(', ')}`);
+      recommendations.push(`⏰ Época crítica: ${colombianInfo.epoca_critica}`);
+      
+      if (colombianInfo.control_biologico?.length > 0) {
+        recommendations.push(`🦠 Control biológico: ${colombianInfo.control_biologico.join(', ')}`);
+      }
+      
+      if (colombianInfo.control_cultural?.length > 0) {
+        recommendations.push(`🌾 Control cultural: ${colombianInfo.control_cultural.join(', ')}`);
+      }
+    } else {
+      recommendations.push('ℹ️ Consultar con técnico agrícola local para información específica de Colombia');
+      recommendations.push('📞 Contactar al ICA (Instituto Colombiano Agropecuario) para asesoría');
+      recommendations.push('🏢 Visitar oficina de AGROSAVIA más cercana');
+    }
+
+    recommendations.push('📖 Verificar productos registrados en ICA antes de aplicar');
+    recommendations.push('⚠️ Respetar períodos de carencia según normativa colombiana');
+
+    return recommendations;
+  }
+
+  /**
+   * Generar recomendaciones específicas para cultivos colombianos
+   * @private
+   */
+  _generateColombianCropRecommendations(cropName, cropInfo, pests) {
+    const recommendations = [];
+
+    if (cropInfo) {
+      recommendations.push(`🌱 Cultivo: ${cropInfo.nombre} (${cropInfo.nombreCientifico})`);
+      recommendations.push(`📍 Principales regiones: ${cropInfo.regiones?.join(', ')}`);
+      recommendations.push(`🌧️ Época de siembra: ${cropInfo.epoca_siembra}`);
+      recommendations.push(`🌾 Época de cosecha: ${cropInfo.epoca_cosecha}`);
+      
+      if (pests && pests.length > 0) {
+        recommendations.push(`🐛 Plagas principales en Colombia:`);
+        pests.forEach(pest => {
+          if (pest.nombre) {
+            recommendations.push(`   • ${pest.nombre} (${pest.nombreCientifico})`);
+          }
+        });
+      }
+      
+      recommendations.push('💡 Recomendaciones generales:');
+      recommendations.push('   • Implementar manejo integrado de plagas (MIP)');
+      recommendations.push('   • Usar variedades resistentes cuando estén disponibles');
+      recommendations.push('   • Mantener monitoreo regular según época crítica');
+      recommendations.push('   • Consultar asistencia técnica local');
+    } else {
+      recommendations.push(`❓ No se encontró información específica para ${cropName} en Colombia`);
+      recommendations.push('📞 Consultar con:');
+      recommendations.push('   • ICA - Instituto Colombiano Agropecuario');
+      recommendations.push('   • AGROSAVIA - Corporación Colombiana de Investigación Agropecuaria');
+      recommendations.push('   • UMATA local (Unidad Municipal de Asistencia Técnica)');
+    }
+
+    return recommendations;
   }
 }
 
