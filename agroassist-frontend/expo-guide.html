@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AgroAssist - Expo Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #43C6AC, #191654);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .expo-info {
+            padding: 20px;
+            background: #e3f2fd;
+            margin: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        .code-block {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .button {
+            background: #43C6AC;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #3aa89c;
+        }
+        .steps {
+            padding: 20px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 3px solid #43C6AC;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 AgroAssist</h1>
+            <p>Demo con Expo Snack</p>
+        </div>
+        
+        <div class="expo-info">
+            <h3>📱 ¿Problemas con Metro Bundler?</h3>
+            <p>¡No te preocupes! Aquí tienes <strong>2 alternativas</strong> que funcionan sin problemas:</p>
+        </div>
+        
+        <div class="steps">
+            <div class="step">
+                <h3>🌐 Opción 1: Demo Web (YA FUNCIONANDO)</h3>
+                <p>La demo web ya se abrió en tu navegador. Si no la ves:</p>
+                <ul>
+                    <li>Ve a la carpeta del proyecto</li>
+                    <li>Haz doble clic en <code>web-demo.html</code></li>
+                    <li>¡Disfruta de todas las funciones de AgroAssist!</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h3>📱 Opción 2: Expo Snack Online</h3>
+                <p>Para una experiencia React Native real:</p>
+                <ol>
+                    <li>Ve a <a href="https://snack.expo.dev" target="_blank" class="button">Abrir Expo Snack</a></li>
+                    <li>Borra todo el código del editor</li>
+                    <li>Copia el código de abajo:</li>
+                </ol>
+                
+                <div class="code-block">
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+
+export default function AgroAssist() {
+  const [activeTab, setActiveTab] = useState('home');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedPest, setSelectedPest] = useState(null);
+
+  const plagas = [
+    {
+      id: 1,
+      name: 'Gusano Cogollero',
+      scientific: 'Spodoptera frugiperda',
+      description: 'Plaga principal del maíz en Colombia',
+      detail: 'Ataca las hojas jóvenes del maíz causando pérdidas significativas.'
+    },
+    {
+      id: 2,
+      name: 'Broca del Café',
+      scientific: 'Hypothenemus hampei',
+      description: 'Principal problema del café',
+      detail: 'Perfora los frutos del café causando pérdidas económicas importantes.'
+    },
+    {
+      id: 3,
+      name: 'Mosca Blanca',
+      scientific: 'Bemisia tabaci',
+      description: 'Vector de virus en cultivos',
+      detail: 'Transmite virus y produce melaza que favorece la fumagina.'
+    }
+  ];
+
+  const showPestDetail = (pest) => {
+    setSelectedPest(pest);
+    setModalVisible(true);
+  };
+
+  const renderHome = () => (
+    <ScrollView style={styles.content}>
+      <View style={styles.card}>
+        <Text style={styles.welcomeTitle}>¡Bienvenido a AgroAssist! 🌱</Text>
+        <Text style={styles.welcomeText}>
+          Tu asistente inteligente para agricultura en Colombia
+        </Text>
+      </View>
+      
+      <View style={styles.featuresGrid}>
+        <TouchableOpacity 
+          style={styles.featureCard} 
+          onPress={() => setActiveTab('plagas')}
+        >
+          <Text style={styles.featureIcon}>🐛</Text>
+          <Text style={styles.featureTitle}>Plagas</Text>
+          <Text style={styles.featureDesc}>Identifica plagas</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.featureCard}
+          onPress={() => setActiveTab('cultivos')}
+        >
+          <Text style={styles.featureIcon}>🌾</Text>
+          <Text style={styles.featureTitle}>Cultivos</Text>
+          <Text style={styles.featureDesc}>Info de cultivos</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.featureCard}
+          onPress={() => setActiveTab('precios')}
+        >
+          <Text style={styles.featureIcon}>💰</Text>
+          <Text style={styles.featureTitle}>Precios</Text>
+          <Text style={styles.featureDesc}>Precios actuales</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.featureCard}
+          onPress={() => setActiveTab('perfil')}
+        >
+          <Text style={styles.featureIcon}>👤</Text>
+          <Text style={styles.featureTitle}>Perfil</Text>
+          <Text style={styles.featureDesc}>Tu información</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+
+  const renderPlagas = () => (
+    <ScrollView style={styles.content}>
+      <Text style={styles.sectionTitle}>🐛 Plagas Comunes en Colombia</Text>
+      {plagas.map(plaga => (
+        <TouchableOpacity 
+          key={plaga.id} 
+          style={styles.listItem}
+          onPress={() => showPestDetail(plaga)}
+        >
+          <Text style={styles.itemTitle}>{plaga.name}</Text>
+          <Text style={styles.itemSubtitle}>{plaga.scientific}</Text>
+          <Text style={styles.itemDesc}>{plaga.description}</Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  const renderCultivos = () => (
+    <ScrollView style={styles.content}>
+      <Text style={styles.sectionTitle}>🌾 Cultivos de Colombia</Text>
+      <View style={styles.card}>
+        <Text style={styles.cultivoTitle}>☕ Café</Text>
+        <Text style={styles.cultivoText}>Regiones: Eje Cafetero, Huila, Nariño</Text>
+        <Text style={styles.cultivoText}>Época: Abril-mayo, octubre-noviembre</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.cultivoTitle}>🌽 Maíz</Text>
+        <Text style={styles.cultivoText}>Regiones: Costa Atlántica, Llanos</Text>
+        <Text style={styles.cultivoText}>Época: Marzo-mayo, agosto-octubre</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.cultivoTitle}>🍌 Plátano</Text>
+        <Text style={styles.cultivoText}>Regiones: Urabá, Magdalena, Valle</Text>
+        <Text style={styles.cultivoText}>Época: Todo el año</Text>
+      </View>
+    </ScrollView>
+  );
+
+  const renderPrecios = () => (
+    <ScrollView style={styles.content}>
+      <Text style={styles.sectionTitle}>💰 Precios de Referencia</Text>
+      <View style={styles.priceItem}>
+        <Text style={styles.priceName}>Café Pergamino</Text>
+        <Text style={styles.priceValue}>$850,000 - $950,000</Text>
+      </View>
+      <View style={styles.priceItem}>
+        <Text style={styles.priceName}>Maíz Amarillo</Text>
+        <Text style={styles.priceValue}>$85,000 - $95,000</Text>
+      </View>
+      <View style={styles.priceItem}>
+        <Text style={styles.priceName}>Plátano Verde</Text>
+        <Text style={styles.priceValue}>$800 - $1,200</Text>
+      </View>
+    </ScrollView>
+  );
+
+  const renderPerfil = () => (
+    <ScrollView style={styles.content}>
+      <Text style={styles.sectionTitle}>👤 Mi Perfil</Text>
+      <View style={styles.card}>
+        <Text style={styles.profileTitle}>Información Personal</Text>
+        <Text style={styles.profileText}>Nombre: Juan Agricultor</Text>
+        <Text style={styles.profileText}>Email: juan@agroassist.co</Text>
+        <Text style={styles.profileText}>Ubicación: Valle del Cauca</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.profileTitle}>Mis Cultivos</Text>
+        <Text style={styles.profileText}>• Café - 5 hectáreas</Text>
+        <Text style={styles.profileText}>• Plátano - 2 hectáreas</Text>
+        <Text style={styles.profileText}>• Maíz - 3 hectáreas</Text>
+      </View>
+    </ScrollView>
+  );
+
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'plagas': return renderPlagas();
+      case 'cultivos': return renderCultivos();
+      case 'precios': return renderPrecios();
+      case 'perfil': return renderPerfil();
+      default: return renderHome();
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🌱 AgroAssist</Text>
+        <Text style={styles.headerSubtitle}>Agricultura Inteligente</Text>
+      </View>
+
+      {/* Content */}
+      {renderContent()}
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity 
+          style={[styles.navItem, activeTab === 'home' && styles.navItemActive]}
+          onPress={() => setActiveTab('home')}
+        >
+          <Text style={styles.navIcon}>🏠</Text>
+          <Text style={styles.navText}>Inicio</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.navItem, activeTab === 'plagas' && styles.navItemActive]}
+          onPress={() => setActiveTab('plagas')}
+        >
+          <Text style={styles.navIcon}>🐛</Text>
+          <Text style={styles.navText}>Plagas</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.navItem, activeTab === 'cultivos' && styles.navItemActive]}
+          onPress={() => setActiveTab('cultivos')}
+        >
+          <Text style={styles.navIcon}>🌾</Text>
+          <Text style={styles.navText}>Cultivos</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.navItem, activeTab === 'precios' && styles.navItemActive]}
+          onPress={() => setActiveTab('precios')}
+        >
+          <Text style={styles.navIcon}>💰</Text>
+          <Text style={styles.navText}>Precios</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.navItem, activeTab === 'perfil' && styles.navItemActive]}
+          onPress={() => setActiveTab('perfil')}
+        >
+          <Text style={styles.navIcon}>👤</Text>
+          <Text style={styles.navText}>Perfil</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Modal for pest details */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+            
+            {selectedPest && (
+              <>
+                <Text style={styles.modalTitle}>{selectedPest.name}</Text>
+                <Text style={styles.modalScientific}>{selectedPest.scientific}</Text>
+                <Text style={styles.modalDescription}>{selectedPest.detail}</Text>
+                
+                <Text style={styles.modalSectionTitle}>Métodos de Control:</Text>
+                <Text style={styles.modalListItem}>• Control biológico</Text>
+                <Text style={styles.modalListItem}>• Trampas específicas</Text>
+                <Text style={styles.modalListItem}>• Insecticidas selectivos</Text>
+                <Text style={styles.modalListItem}>• Prácticas culturales</Text>
+                <Text style={styles.modalListItem}>• Monitoreo constante</Text>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f2f5',
+  },
+  header: {
+    backgroundColor: '#43C6AC',
+    paddingTop: 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 5,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'white',
+    opacity: 0.9,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  welcomeTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#191654',
+    marginBottom: 10,
+  },
+  welcomeText: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+  },
+  featuresGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  featureCard: {
+    width: '48%',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 15,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  featureIcon: {
+    fontSize: 40,
+    marginBottom: 10,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#191654',
+    marginBottom: 5,
+  },
+  featureDesc: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#191654',
+    marginBottom: 20,
+  },
+  listItem: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#191654',
+    marginBottom: 5,
+  },
+  itemSubtitle: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#666',
+    marginBottom: 5,
+  },
+  itemDesc: {
+    fontSize: 14,
+    color: '#666',
+  },
+  cultivoTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#191654',
+    marginBottom: 10,
+  },
+  cultivoText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+  priceItem: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  priceName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#191654',
+  },
+  priceValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#43C6AC',
+  },
+  profileTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#191654',
+    marginBottom: 10,
+  },
+  profileText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  navItemActive: {
+    backgroundColor: '#f0f9ff',
+  },
+  navIcon: {
+    fontSize: 20,
+    marginBottom: 2,
+  },
+  navText: {
+    fontSize: 10,
+    color: '#666',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+    padding: 10,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#666',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#191654',
+    marginBottom: 10,
+  },
+  modalScientific: {
+    fontSize: 16,
+    fontStyle: 'italic',
+    color: '#43C6AC',
+    marginBottom: 15,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  modalSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#191654',
+    marginBottom: 10,
+  },
+  modalListItem: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+});
+                </div>
+                
+                <p>4. Pega este código en Expo Snack</p>
+                <p>5. ¡Ve la preview en tiempo real!</p>
+            </div>
+            
+            <div class="step">
+                <h3>⚡ ¿Por qué funciona mejor?</h3>
+                <ul>
+                    <li><strong>Demo Web:</strong> No requiere emuladores ni configuración</li>
+                    <li><strong>Expo Snack:</strong> Servidor online de React Native</li>
+                    <li><strong>Sin Metro:</strong> Evita problemas de dependencias</li>
+                    <li><strong>Multiplataforma:</strong> Funciona en cualquier dispositivo</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-abrir Expo Snack si es necesario
+        function openExpoSnack() {
+            window.open('https://snack.expo.dev', '_blank');
+        }
+    </script>
+</body>
+</html>

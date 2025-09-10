@@ -1,53 +1,98 @@
 
-# AgroAssist - Backend
+# 🌱 AgroAssist - Proyecto Completo
 
-Este repositorio contiene el código fuente del backend de **AgroAssist**, una aplicación móvil desarrollada para brindar asistencia a pequeños agricultores colombianos mediante el uso de inteligencia artificial (IA), APIs agroclimáticas y un sistema de gestión de información agrícola.
+Sistema completo de asistencia agrícola inteligente para Colombia.
 
-## 🛠 Tecnologías utilizadas
+## 📋 Resumen del Proyecto
 
-- **Node.js** - Entorno de ejecución JavaScript.
-- **Express.js** - Framework web para la creación de la API REST.
-- **MySQL** - Motor de base de datos relacional.
-- **JWT (JSON Web Tokens)** - Para autenticación de usuarios.
+AgroAssist es una aplicación completa que incluye:
 
-- **RESTful APIs** - Consumo de servicios externos (clima, precios, plagas).
+### 🔙 Backend (Node.js/Express)
+- **Ubicación**: `agroassist-backend/`
+- **Tecnologías**: Node.js, Express, MySQL, JWT
+- **Funcionalidades**:
+  - Autenticación de usuarios
+  - APIs de plagas especializadas para Colombia
+  - Integración con APIs científicas gratuitas (GBIF, iNaturalist, USDA)
+  - Información de cultivos colombianos
+  - Sistema bilingüe (Español/Inglés)
 
-## 📁 Estructura del proyecto (prevista)
+### 📱 Frontend Mobile (React Native)
+- **Ubicación**: `agroassist-frontend/`
+- **Tecnologías**: React Native, React Navigation, Material Icons
+- **Funcionalidades**:
+  - Aplicación móvil completa
+  - Sistema de autenticación
+  - Consulta de plagas y cultivos
+  - Precios de mercado simulados
+  - Planes de manejo integrado
+  - Diseño responsivo con tema agrícola
+
+## 🚀 Configuración Rápida
+
+### 1. Backend
+```bash
+cd agroassist-backend
+npm install
+# Configurar base de datos MySQL
+# Ejecutar scripts SQL en guia del proyecto/Script/
+npm start
+```
+
+### 2. Frontend
+```bash
+cd agroassist-frontend
+npm install
+# Para Android:
+npx react-native run-android
+# Para iOS (solo macOS):
+cd ios && pod install && cd ..
+npx react-native run-ios
+```
+
+## 📁 Estructura Completa
 
 ```
-agroassist-backend/
-├── controllers/        
-├── routes/            
-├── models/             
-├── middlewares/        
-├── services/           
-├── config/             
-├── .env                
-├── .gitignore          
-├── README.md           
-└── index.js            
+agroassist/
+├── README.md                           # Este archivo
+├── agroassist-backend/                 # Backend Node.js
+│   ├── src/
+│   │   ├── application/use-cases/      # Casos de uso
+│   │   ├── domain/entities/            # Entidades del dominio
+│   │   ├── infrastructure/             # Servicios e infraestructura
+│   │   └── interfaces/                 # Controladores y rutas
+│   ├── package.json
+│   └── API_DOCUMENTATION.md
+├── agroassist-frontend/                # Frontend React Native
+│   ├── src/
+│   │   ├── components/                 # Componentes reutilizables
+│   │   ├── navigation/                 # Navegación
+│   │   ├── screens/                    # Pantallas
+│   │   ├── services/                   # APIs y contextos
+│   │   └── styles/                     # Estilos globales
+│   ├── package.json
+│   └── README.md
+└── guia del proyecto/                  # Documentación y BD
+    └── Script/                         # Scripts de base de datos
+        ├── BaseDeDatosAgroassist.sql
+        ├── MejorasBaseDatos.sql
+        └── MigracionAlterTables.sql
 ```
 
-## 🚀 Funcionalidades del backend
+## 🏆 Logros del Proyecto
 
-- Registro e inicio de sesión de usuarios con autenticación por JWT.
-- Gestión de roles: usuario estándar y administrador.
-- Endpoints REST para:
-  - Consulta de clima actual y pronóstico (OpenWeatherMap, Weatherstack).
-  - Consulta de precios del mercado (Agrodata, Agromática).
-  - Información sobre plagas y su control (Agri-Tech).
+✅ **Sistema completo funcional** - Backend + Frontend integrados
+✅ **Información especializada** - Datos específicos para Colombia  
+✅ **APIs científicas** - Integración con fuentes confiables
+✅ **UX profesional** - Diseño intuitivo y atractivo
+✅ **Código limpio** - Arquitectura escalable y mantenible
+✅ **Documentación completa** - Guías técnicas y de usuario
 
-- Preparado para respuestas por texto y voz (integración con frontend por API).
+---
 
-## 🔐 Contexto legal y normativo
+**AgroAssist - Asistente agrícola inteligente para Colombia** 🇨🇴🌱
 
-- **Ley 1581 de 2012** – Protección de Datos Personales en Colombia. [Ver norma](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981)
-- **Ley 1341 de 2009** – Impulso a las TIC para reducir la brecha digital. [Ver norma](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=36913)
-- **Resolución 2564 de 2016 (MinTIC)** – Accesibilidad digital e inclusión en el desarrollo de software. [Ver resolución](https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mintic_2564_2016.htm)
-
-## ⚠️ Consideraciones
-
-- El tratamiento de datos se realiza con consentimiento del usuario y siguiendo los principios de legalidad, finalidad y transparencia.
+*Desarrollado con tecnologías modernas para ayudar a los agricultores colombianos*
 - Se garantiza el derecho de los usuarios a actualizar o eliminar su información personal en cualquier momento.
 
 ## 🧑‍💻 Contribuciones
