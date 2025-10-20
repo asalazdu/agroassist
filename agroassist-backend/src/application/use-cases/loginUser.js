@@ -29,7 +29,7 @@ const loginUser = async ({ correo, contrasena }, { userRepository, hashService, 
 
   return {
     message: 'Inicio de sesión exitoso',
-    usuario: {
+    user: {  // Cambiado de 'usuario' a 'user' para compatibilidad con frontend
       id: user.id,
       nombre: user.nombre_completo,
       correo: user.correo,

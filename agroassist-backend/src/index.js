@@ -2,12 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const db = require('./infrastructure/database/mysql/db');
+// Cambiado a Supabase (PostgreSQL)
+const supabase = require('./infrastructure/database/supabase/supabaseClient');
 const authRoutes = require('./interfaces/routes/auth.routes');
 const pestRoutes = require('./interfaces/routes/pest.routes');
 const weatherRoutes = require('./interfaces/routes/weather.routes');
 const marketPricesRoutes = require('./interfaces/routes/marketPrices.routes');
 const colombianPestRoutes = require('./interfaces/routes/colombianPest.routes');
+const cultivoRoutes = require('./interfaces/routes/cultivo.routes');
 
 // Middlewares
 app.use(express.json());
@@ -19,15 +21,34 @@ app.use('/api/pests', pestRoutes);
 app.use('/api/plagas', colombianPestRoutes); // Rutas en español para Colombia
 app.use('/api/weather', weatherRoutes);
 app.use('/api/market', marketPricesRoutes);
+app.use('/api/cultivos', cultivoRoutes);
 
 // Endpoint de prueba de base de datos
-app.get('/ping', (req, res) => {
-  db.query('SELECT 1 + 1 AS resultado', (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error al conectar a la base de datos' });
+app.get('/ping', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('count')
+      .limit(1);
+    
+    if (error) {
+      return res.status(500).json({ 
+        error: 'Error al conectar a Supabase', 
+        detalle: error.message 
+      });
     }
-    res.json({ mensaje: 'Conexión exitosa', resultado: results[0].resultado });
-  });
+    
+    res.json({ 
+      mensaje: 'Conexión exitosa a Supabase PostgreSQL',
+      database: 'PostgreSQL (Supabase)',
+      status: 'OK'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Error al conectar a la base de datos',
+      detalle: error.message 
+    });
+  }
 });
 
 // Endpoint de información de APIs
@@ -67,8 +88,9 @@ app.get('/api/info', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log('🌐 Accesible desde emulador Android en http://10.0.2.2:' + PORT);
   console.log('APIs gratuitas disponibles: GBIF, iNaturalist, USDA');
   console.log('Sistema colombiano: /api/plagas (español)');
   console.log('Sistema internacional: /api/pests (inglés)');

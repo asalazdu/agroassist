@@ -1,12 +1,23 @@
 // Tipos para autenticación
 export interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  location?: string;
-  farmSize?: string;
+  id: string | number;
+  name?: string; // Frontend (inglés)
+  email?: string; // Frontend (inglés)
+  phone?: string; // Frontend (inglés)
+  location?: string; // Frontend (inglés)
+  farmSize?: string; // Frontend (inglés)
   crops?: string[];
+  
+  // Compatibilidad con backend (español)
+  nombre?: string;
+  nombre_completo?: string;
+  correo?: string;
+  telefono?: string;
+  ubicacion?: string;
+  tamaño_finca?: string;
+  id_rol?: number;
+  activo?: boolean;
+  fecha_creacion?: string;
 }
 
 export interface AuthState {
@@ -75,6 +86,7 @@ export interface Recommendation {
 
 // Tipos de navegación
 export type RootStackParamList = {
+  Welcome: undefined;
   Auth: undefined;
   Main: undefined;
   Login: undefined;
@@ -147,4 +159,18 @@ export interface MarketAnalysis {
   forecast: string;
   recommendations: string[];
   priceHistory: PriceHistory[];
+}
+
+// Tipos para chatbot
+export interface ChatMessage {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+  suggestions?: string[];
+}
+
+export interface ChatResponse {
+  message: string;
+  suggestions?: string[];
 }

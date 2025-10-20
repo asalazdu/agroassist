@@ -1,39 +1,38 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG, getAuthHeaders } from '../config/api';
 
+// Interfaces actualizadas para compatibilidad con backend Supabase
 export interface User {
-  id: string;
-  nombre: string;
-  apellido: string;
-  email: string;
+  id: number;
+  nombre: string; // nombre_completo en BD
+  correo: string; // email en frontend
   telefono?: string;
   ubicacion?: string;
-  tipoAgricultor: 'pequeño' | 'mediano' | 'grande';
-  cultivos: string[];
-  fechaRegistro: string;
-  avatar?: string;
+  tamaño_finca?: string; // tamaño de la finca
+  id_rol?: number;
+  activo?: boolean;
+  fecha_creacion?: string;
 }
 
 export interface LoginData {
-  email: string;
-  password: string;
+  correo: string; // Coincide con backend
+  contrasena: string; // Coincide con backend
 }
 
 export interface RegisterData {
-  nombre: string;
-  apellido: string;
-  email: string;
-  password: string;
+  nombre_completo: string; // Coincide con backend
+  correo: string;
+  contrasena: string;
   telefono?: string;
   ubicacion?: string;
-  tipoAgricultor: 'pequeño' | 'mediano' | 'grande';
-  cultivos: string[];
+  tamaño_finca?: string;
 }
 
 export interface AuthResponse {
-  success: boolean;
+  ok: boolean; // Backend usa 'ok' en lugar de 'success'
   token?: string;
   user?: User;
+  msg?: string; // Backend usa 'msg'
   message?: string;
 }
 
@@ -52,20 +51,20 @@ class AuthService {
       
       const data = await response.json();
       
-      if (response.ok && data.success) {
+      if (response.ok && data.ok) {
         // Guardar token y usuario en storage
         await this.saveAuthData(data.token, data.user);
         return data;
       } else {
         return {
-          success: false,
-          message: data.message || 'Error al iniciar sesión'
+          ok: false,
+          message: data.msg || data.message || 'Error al iniciar sesión'
         };
       }
     } catch (error) {
       console.error('Login error:', error);
       return {
-        success: false,
+        ok: false,
         message: 'Error de conexión. Verifica tu internet.'
       };
     }
@@ -82,20 +81,20 @@ class AuthService {
       
       const data = await response.json();
       
-      if (response.ok && data.success) {
+      if (response.ok && data.ok) {
         // Guardar token y usuario en storage
         await this.saveAuthData(data.token, data.user);
         return data;
       } else {
         return {
-          success: false,
-          message: data.message || 'Error al registrar usuario'
+          ok: false,
+          message: data.msg || data.message || 'Error al registrar usuario'
         };
       }
     } catch (error) {
       console.error('Register error:', error);
       return {
-        success: false,
+        ok: false,
         message: 'Error de conexión. Verifica tu internet.'
       };
     }
@@ -158,7 +157,7 @@ class AuthService {
     try {
       const token = await this.getToken();
       if (!token) {
-        return { success: false, message: 'No hay sesión activa' };
+        return { ok: false, message: 'No hay sesión activa' };
       }
       
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/profile`, {
@@ -169,20 +168,20 @@ class AuthService {
       
       const data = await response.json();
       
-      if (response.ok && data.success) {
+      if (response.ok && data.ok) {
         // Actualizar usuario en storage
         await this.saveUser(data.user);
         return data;
       } else {
         return {
-          success: false,
-          message: data.message || 'Error al actualizar perfil'
+          ok: false,
+          message: data.msg || data.message || 'Error al actualizar perfil'
         };
       }
     } catch (error) {
       console.error('Update profile error:', error);
       return {
-        success: false,
+        ok: false,
         message: 'Error de conexión. Verifica tu internet.'
       };
     }

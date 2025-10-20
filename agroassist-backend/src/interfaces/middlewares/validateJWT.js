@@ -1,6 +1,7 @@
 const { response } = require('express');
 const tokenService = require('../../infrastructure/shared/utils/token');
-const userRepository = require('../../infrastructure/database/mysql/userRepository');
+// Cambiado a Supabase (PostgreSQL)
+const userRepository = require('../../infrastructure/database/supabase/userRepository');
 
 /**
  * Middleware para validar JWT y autenticar usuario
@@ -89,6 +90,9 @@ const validateJWT = async (req, res = response, next) => {
       correo: user.correo,
       rol: user.id_rol
     };
+    
+    // También agregar uid para compatibilidad con controladores
+    req.uid = user.id;
 
     // Continuar con el siguiente middleware/controlador
     next();

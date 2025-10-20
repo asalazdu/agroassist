@@ -1,7 +1,14 @@
 // Configuración de APIs
 export const API_CONFIG = {
-  // Backend de AgroAssist
-  BASE_URL: 'http://localhost:3000/api',
+  // Backend de AgroAssist con Supabase
+  // Para Android Emulator: usar 10.0.2.2 en lugar de localhost
+  BASE_URL: 'http://10.0.2.2:3000/api',
+  
+  // Backend alternativo para desarrollo web/iOS
+  BASE_URL_LOCALHOST: 'http://localhost:3000/api',
+  
+  // Supabase (solo para referencia, el backend maneja todo)
+  SUPABASE_URL: 'https://endtgngduxyxdyponecx.supabase.co',
   
   // OpenWeatherMap (gratuita) - Registrarse en openweathermap.org
   WEATHER_API_KEY: 'tu_api_key_aqui', // Reemplazar con tu API key

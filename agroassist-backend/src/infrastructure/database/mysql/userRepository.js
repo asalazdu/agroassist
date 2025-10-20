@@ -29,7 +29,7 @@ const createUser = async ({
   correo, 
   contrasena 
 }) => {
-  await db.promise().query(
+  const [result] = await db.promise().query(
     'INSERT INTO usuarios (nombre_completo, correo, contrasena, id_rol) VALUES (?, ?, ?, ?)',
     [nombre_completo, 
       correo, 
@@ -37,6 +37,17 @@ const createUser = async ({
       2
     ]
   );
+  
+  // Obtener el usuario recién creado con su rol
+  const [rows] = await db.promise().query(
+    `SELECT u.id, u.nombre_completo as nombre, u.correo, r.nombre as rol 
+     FROM usuarios u 
+     INNER JOIN roles r ON u.id_rol = r.id 
+     WHERE u.id = ?`,
+    [result.insertId]
+  );
+  
+  return rows[0];
 };
 
 const updateResetToken = async (correo, token, expiracion) => {
@@ -93,6 +104,40 @@ const resetLoginAttempts = async (id) => {
   );
 };
 
+const updateUserProfile = async (id, { nombre_completo, telefono, ubicacion, tamaño_finca }) => {
+  const updates = [];
+  const values = [];
+
+  if (nombre_completo !== undefined) {
+    updates.push('nombre_completo = ?');
+    values.push(nombre_completo);
+  }
+  if (telefono !== undefined) {
+    updates.push('telefono = ?');
+    values.push(telefono);
+  }
+  if (ubicacion !== undefined) {
+    updates.push('ubicacion = ?');
+    values.push(ubicacion);
+  }
+  if (tamaño_finca !== undefined) {
+    updates.push('tamaño_finca = ?');
+    values.push(tamaño_finca);
+  }
+
+  if (updates.length === 0) {
+    throw new Error('No hay campos para actualizar');
+  }
+
+  values.push(id);
+  const query = `UPDATE usuarios SET ${updates.join(', ')} WHERE id = ?`;
+  
+  await db.promise().query(query, values);
+  
+  // Retornar el usuario actualizado
+  return await findById(id);
+};
+
 
 module.exports = {
   findByEmail,
@@ -104,5 +149,6 @@ module.exports = {
   resetPassword,
   updateLoginAttempts,
   lockAccount,
-  resetLoginAttempts
+  resetLoginAttempts,
+  updateUserProfile
 };

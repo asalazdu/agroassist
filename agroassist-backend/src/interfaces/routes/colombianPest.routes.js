@@ -5,7 +5,7 @@
 
 const express = require('express');
 const colombianPestController = require('../controllers/colombianPest.controller');
-const validateJWT = require('../middlewares/validateJWT');
+const { validateJWT } = require('../middlewares/validateJWT'); // Desestructurado
 
 const router = express.Router();
 

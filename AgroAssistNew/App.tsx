@@ -4,12 +4,18 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-gesture-handler';
 
 // Importar servicios
 import authService from './src/services/authService';
 
+// Importar componentes
+import FloatingChatButton from './src/components/FloatingChatButton';
+import ChatbotModal from './src/components/ChatbotModal';
+
 // Importar pantallas
+import WelcomeScreen from './src/screens/WelcomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
@@ -27,7 +33,7 @@ import { RootStackParamList, User } from './src/types';
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
-// Navegador de autenticación
+// Navegador de autenticación con Welcome
 function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   return (
     <Stack.Navigator 
@@ -36,6 +42,7 @@ function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         cardStyle: { backgroundColor: '#f5f5f5' }
       }}
     >
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="Login">
         {(props) => <LoginScreen {...props} onLoginSuccess={onLoginSuccess} />}
       </Stack.Screen>
@@ -49,12 +56,15 @@ function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
 
 // Navegador principal con tabs
 function MainTabs({ onLogout }: { onLogout: () => void }) {
+  const [isChatbotVisible, setIsChatbotVisible] = useState(false);
+
   return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarActiveTintColor: '#4CAF50',
-        tabBarInactiveTintColor: '#666',
-        tabBarStyle: {
+    <>
+      <Tab.Navigator
+        screenOptions={{
+          tabBarActiveTintColor: '#4CAF50',
+          tabBarInactiveTintColor: '#666',
+          tabBarStyle: {
           backgroundColor: 'white',
           borderTopWidth: 1,
           borderTopColor: '#e0e0e0',
@@ -164,6 +174,14 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
         {() => <ProfileScreen onLogout={onLogout} />}
       </Tab.Screen>
     </Tab.Navigator>
+    
+    {/* Chatbot flotante */}
+    <FloatingChatButton onPress={() => setIsChatbotVisible(true)} />
+    <ChatbotModal
+      visible={isChatbotVisible}
+      onClose={() => setIsChatbotVisible(false)}
+    />
+    </>
   );
 }
 
@@ -171,6 +189,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [isFirstLaunch, setIsFirstLaunch] = useState<boolean | null>(null);
 
   useEffect(() => {
     checkAuthStatus();
@@ -178,6 +197,16 @@ export default function App() {
 
   const checkAuthStatus = async () => {
     try {
+      // Verificar si es el primer lanzamiento
+      const hasLaunched = await AsyncStorage.getItem('hasLaunched');
+      if (hasLaunched === null) {
+        setIsFirstLaunch(true);
+        await AsyncStorage.setItem('hasLaunched', 'true');
+      } else {
+        setIsFirstLaunch(false);
+      }
+
+      // Verificar autenticación
       const token = await authService.getStoredToken();
       const userData = await authService.getStoredUser();
       

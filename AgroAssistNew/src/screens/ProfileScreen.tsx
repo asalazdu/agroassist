@@ -28,26 +28,86 @@ const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
 
   const loadUserData = async () => {
     try {
-      const userData = await authService.getStoredUser();
-      if (userData) {
-        setUser(userData);
-        setFormData(userData);
-      }
+      // Primero intentar obtener datos del backend
+      console.log('📥 Cargando datos del usuario desde el backend...');
+      const userData = await authService.getUserProfile();
+      
+      console.log('✅ Datos recibidos:', userData);
+      
+      // Mapear los datos del backend al formato del frontend
+      const mappedUser = {
+        id: userData.id,
+        name: userData.nombre_completo || userData.name,
+        email: userData.correo || userData.email,
+        phone: userData.telefono || userData.phone || '',
+        location: userData.ubicacion || userData.location || '',
+        farmSize: userData.tamaño_finca ? String(userData.tamaño_finca) : '',
+        // Mantener también los campos en español por compatibilidad
+        nombre_completo: userData.nombre_completo,
+        correo: userData.correo,
+        telefono: userData.telefono,
+        ubicacion: userData.ubicacion,
+        tamaño_finca: userData.tamaño_finca,
+        id_rol: userData.id_rol,
+        activo: userData.activo,
+        fecha_creacion: userData.fecha_creacion
+      };
+      
+      setUser(mappedUser);
+      setFormData(mappedUser);
     } catch (error) {
-      console.error('Error cargando datos del usuario:', error);
+      console.error('❌ Error cargando datos del usuario desde backend:', error);
+      
+      // Si falla, intentar cargar desde AsyncStorage (datos locales)
+      try {
+        console.log('📦 Cargando datos locales de AsyncStorage...');
+        const storedUser = await authService.getStoredUser();
+        if (storedUser) {
+          setUser(storedUser);
+          setFormData(storedUser);
+        } else {
+          Alert.alert('Error', 'No se pudo cargar la información del usuario. Por favor inicia sesión nuevamente.');
+        }
+      } catch (localError) {
+        console.error('❌ Error cargando datos locales:', localError);
+        Alert.alert('Error', 'No se pudo cargar la información del usuario.');
+      }
     }
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.email) {
-      Alert.alert('Error', 'Nombre y email son obligatorios');
+    if (!formData.name) {
+      Alert.alert('Error', 'El nombre es obligatorio');
       return;
     }
 
     setIsLoading(true);
     try {
       const updatedUser = await authService.updateProfile(formData);
-      setUser(updatedUser);
+      
+      console.log('✅ Usuario actualizado desde backend:', updatedUser);
+      
+      // Mapear los datos del backend al formato del frontend
+      const mappedUser = {
+        id: updatedUser.id,
+        name: updatedUser.nombre_completo || updatedUser.name,
+        email: updatedUser.correo || updatedUser.email,
+        phone: updatedUser.telefono || updatedUser.phone || '',
+        location: updatedUser.ubicacion || updatedUser.location || '',
+        farmSize: updatedUser.tamaño_finca ? String(updatedUser.tamaño_finca) : '',
+        // Mantener también los campos en español por compatibilidad
+        nombre_completo: updatedUser.nombre_completo,
+        correo: updatedUser.correo,
+        telefono: updatedUser.telefono,
+        ubicacion: updatedUser.ubicacion,
+        tamaño_finca: updatedUser.tamaño_finca,
+        id_rol: updatedUser.id_rol,
+        activo: updatedUser.activo,
+        fecha_creacion: updatedUser.fecha_creacion
+      };
+      
+      setUser(mappedUser);
+      setFormData(mappedUser);
       setIsEditing(false);
       Alert.alert('Éxito', 'Perfil actualizado correctamente');
     } catch (error) {
@@ -117,14 +177,14 @@ const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Correo Electrónico</Text>
             <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
+              style={[styles.input, styles.inputDisabled]}
               value={formData.email || ''}
-              onChangeText={(text) => updateFormData('email', text)}
               placeholder="tu@email.com"
               keyboardType="email-address"
               autoCapitalize="none"
-              editable={isEditing}
+              editable={false}
             />
+            <Text style={styles.helperText}>El email no puede ser modificado</Text>
           </View>
 
           <View style={styles.inputContainer}>
@@ -245,6 +305,12 @@ const styles = StyleSheet.create({
   inputDisabled: {
     backgroundColor: '#f0f0f0',
     color: '#666',
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   saveButton: {
     backgroundColor: '#4CAF50',

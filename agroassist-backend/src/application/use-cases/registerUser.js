@@ -26,10 +26,11 @@ const registerUser = async ({
     contrasena: hashedPassword 
   });
 
-  await userRepository.createUser(newUser);
+  const createdUser = await userRepository.createUser(newUser);
 
   return { 
-    message: 'Usuario registrado exitosamente' 
+    message: 'Usuario registrado exitosamente',
+    user: createdUser
   };
 };
 

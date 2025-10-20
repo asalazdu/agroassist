@@ -1,9 +1,13 @@
 const jwt = require('jsonwebtoken');
-const secret = process.env.SECRET;
+const secret = process.env.JWT_SECRET || process.env.SECRET;
+
+if (!secret) {
+  console.error('⚠️  ADVERTENCIA: JWT_SECRET no está definido en las variables de entorno');
+}
 
 const generateJWT = (userId) => {
     const token = jwt.sign({ id: userId }, secret, {
-         expiresIn: '1h'
+         expiresIn: process.env.JWT_EXPIRES_IN || '1h'
          });
     return token;
   };

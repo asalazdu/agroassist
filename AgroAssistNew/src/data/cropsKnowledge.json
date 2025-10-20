@@ -1,0 +1,445 @@
+{
+  "cultivos": [
+    {
+      "nombre": "Tomate",
+      "nombre_cientifico": "Solanum lycopersicum",
+      "variedades_comunes": ["Cherry", "Chonto", "Milano", "Río Grande"],
+      "ciclo_dias": {
+        "min": 90,
+        "max": 120,
+        "promedio": 105
+      },
+      "clima_optimo": {
+        "temperatura_min": 18,
+        "temperatura_max": 27,
+        "temperatura_ideal": 22,
+        "humedad_relativa": "60-80%",
+        "precipitacion_mm": "400-600"
+      },
+      "suelo": {
+        "ph_min": 5.5,
+        "ph_max": 7.0,
+        "ph_ideal": 6.5,
+        "tipo": "Franco, franco-arenoso, bien drenado",
+        "profundidad_cm": 40
+      },
+      "riego": {
+        "frecuencia": "Cada 2-3 días",
+        "cantidad_mm": "25-30 mm/semana",
+        "metodo": "Goteo o aspersión",
+        "etapa_critica": "Floración y fructificación"
+      },
+      "fertilizacion": {
+        "nitrogeno_kg_ha": "120-150",
+        "fosforo_kg_ha": "80-100",
+        "potasio_kg_ha": "150-200",
+        "momento": "Aplicar fraccionado: 30% pre-siembra, 40% en floración, 30% en fructificación"
+      },
+      "plagas_comunes": [
+        {
+          "nombre": "Mosca blanca",
+          "nombre_cientifico": "Bemisia tabaci",
+          "sintomas": "Hojas amarillentas, melaza, fumagina negra",
+          "control": "Trampas amarillas, aceite de neem, enemigos naturales"
+        },
+        {
+          "nombre": "Minador de hoja",
+          "nombre_cientifico": "Liriomyza spp.",
+          "sintomas": "Galerías serpenteantes en hojas",
+          "control": "Eliminación de hojas afectadas, aplicación de Spinosad"
+        },
+        {
+          "nombre": "Trips",
+          "nombre_cientifico": "Frankliniella occidentalis",
+          "sintomas": "Deformación de hojas y frutos, manchas plateadas",
+          "control": "Trampas azules, control biológico con ácaros depredadores"
+        }
+      ],
+      "enfermedades_comunes": [
+        {
+          "nombre": "Tizón tardío",
+          "agente": "Phytophthora infestans",
+          "sintomas": "Manchas necróticas en hojas y tallos, pudrición de frutos",
+          "control": "Fungicidas cúpricos, mejorar ventilación, evitar exceso de humedad"
+        },
+        {
+          "nombre": "Marchitez bacteriana",
+          "agente": "Ralstonia solanacearum",
+          "sintomas": "Marchitez súbita, exudado bacteriano",
+          "control": "Rotación de cultivos, variedades resistentes, solarización"
+        }
+      ],
+      "labores_culturales": [
+        {"etapa": "0-15 días", "actividad": "Tutoreo y primer aporque"},
+        {"etapa": "15-30 días", "actividad": "Deshoje sanitario y amarre"},
+        {"etapa": "30-60 días", "actividad": "Despunte de chupones, polinización manual si es necesario"},
+        {"etapa": "60-90 días", "actividad": "Cosecha escalonada de frutos maduros"}
+      ],
+      "cosecha": {
+        "indice_madurez": "Color rojo intenso, firmeza adecuada",
+        "frecuencia": "Cada 3-4 días",
+        "rendimiento_ton_ha": "40-80"
+      }
+    },
+    {
+      "nombre": "Maíz",
+      "nombre_cientifico": "Zea mays",
+      "variedades_comunes": ["ICA V-305", "ICA V-508", "Criollo", "Híbridos"],
+      "ciclo_dias": {
+        "min": 120,
+        "max": 180,
+        "promedio": 150
+      },
+      "clima_optimo": {
+        "temperatura_min": 15,
+        "temperatura_max": 30,
+        "temperatura_ideal": 24,
+        "humedad_relativa": "50-70%",
+        "precipitacion_mm": "500-800"
+      },
+      "suelo": {
+        "ph_min": 5.5,
+        "ph_max": 7.5,
+        "ph_ideal": 6.5,
+        "tipo": "Franco-arcilloso, buena retención de humedad",
+        "profundidad_cm": 60
+      },
+      "riego": {
+        "frecuencia": "Cada 5-7 días",
+        "cantidad_mm": "40-50 mm/semana",
+        "metodo": "Surcos o aspersión",
+        "etapa_critica": "Floración masculina y llenado de grano"
+      },
+      "fertilizacion": {
+        "nitrogeno_kg_ha": "100-140",
+        "fosforo_kg_ha": "60-80",
+        "potasio_kg_ha": "40-60",
+        "momento": "50% en siembra, 50% a los 30-40 días"
+      },
+      "plagas_comunes": [
+        {
+          "nombre": "Gusano cogollero",
+          "nombre_cientifico": "Spodoptera frugiperda",
+          "sintomas": "Perforaciones en hojas, daño en cogollo",
+          "control": "Bacillus thuringiensis, control cultural, trampas de feromonas"
+        },
+        {
+          "nombre": "Barrenador del tallo",
+          "nombre_cientifico": "Diatraea spp.",
+          "sintomas": "Galerías en tallo, plantas quebradas",
+          "control": "Liberación de Trichogramma, eliminación de rastrojos"
+        }
+      ],
+      "enfermedades_comunes": [
+        {
+          "nombre": "Roya común",
+          "agente": "Puccinia sorghi",
+          "sintomas": "Pústulas rojizas en hojas",
+          "control": "Variedades resistentes, fungicidas triazoles"
+        }
+      ],
+      "labores_culturales": [
+        {"etapa": "10-15 días", "actividad": "Primera fertilización y control de malezas"},
+        {"etapa": "30-40 días", "actividad": "Segunda fertilización y aporque"},
+        {"etapa": "60-80 días", "actividad": "Monitoreo de floración y control de plagas"}
+      ],
+      "cosecha": {
+        "indice_madurez": "Grano duro, humedad 14-16%, hojas secas",
+        "rendimiento_ton_ha": "4-6"
+      }
+    },
+    {
+      "nombre": "Café",
+      "nombre_cientifico": "Coffea arabica",
+      "variedades_comunes": ["Caturra", "Colombia", "Castillo", "Cenicafé 1"],
+      "ciclo_dias": {
+        "min": 730,
+        "max": 1095,
+        "promedio": 912
+      },
+      "clima_optimo": {
+        "temperatura_min": 17,
+        "temperatura_max": 23,
+        "temperatura_ideal": 20,
+        "humedad_relativa": "70-85%",
+        "precipitacion_mm": "1500-2000"
+      },
+      "suelo": {
+        "ph_min": 5.0,
+        "ph_max": 6.0,
+        "ph_ideal": 5.5,
+        "tipo": "Franco-arcilloso, bien drenado, rico en materia orgánica",
+        "profundidad_cm": 80
+      },
+      "riego": {
+        "frecuencia": "En época seca: cada 7-10 días",
+        "cantidad_mm": "30-40 mm/semana",
+        "metodo": "Goteo o microaspersión",
+        "etapa_critica": "Floración y llenado de fruto"
+      },
+      "fertilizacion": {
+        "nitrogeno_kg_ha": "200-250",
+        "fosforo_kg_ha": "80-100",
+        "potasio_kg_ha": "150-200",
+        "momento": "Fraccionado en 4 aplicaciones anuales: inicio de lluvias, floración, grano lechoso, post-cosecha"
+      },
+      "plagas_comunes": [
+        {
+          "nombre": "Broca del café",
+          "nombre_cientifico": "Hypothenemus hampei",
+          "sintomas": "Perforaciones en granos de café, caída prematura",
+          "control": "Re-re (recolección oportuna de frutos), trampas alcoholadas, Beauveria bassiana"
+        },
+        {
+          "nombre": "Minador de hoja",
+          "nombre_cientifico": "Leucoptera coffeella",
+          "sintomas": "Manchas plateadas en hojas, defoliación",
+          "control": "Enemigos naturales, podas sanitarias"
+        }
+      ],
+      "enfermedades_comunes": [
+        {
+          "nombre": "Roya del café",
+          "agente": "Hemileia vastatrix",
+          "sintomas": "Manchas amarillo-naranja en envés de hojas",
+          "control": "Variedades resistentes (Castillo, Cenicafé 1), fungicidas cúpricos, nutrición balanceada"
+        },
+        {
+          "nombre": "Ojo de gallo",
+          "agente": "Mycena citricolor",
+          "sintomas": "Manchas circulares con centro claro en hojas",
+          "control": "Podas de regulación de sombra, fungicidas"
+        }
+      ],
+      "labores_culturales": [
+        {"etapa": "Año 1-2", "actividad": "Establecimiento, control de arvenses, formación de copa"},
+        {"etapa": "Año 2-3", "actividad": "Primera cosecha, zoqueo selectivo"},
+        {"etapa": "Año 3+", "actividad": "Renovación por siembra, manejo integrado de plagas"}
+      ],
+      "cosecha": {
+        "indice_madurez": "Frutos rojos cereza, 18-22% de sólidos solubles",
+        "frecuencia": "Pases cada 15-20 días",
+        "rendimiento_ton_ha": "1.5-2.5 (café pergamino seco)"
+      }
+    },
+    {
+      "nombre": "Frijol",
+      "nombre_cientifico": "Phaseolus vulgaris",
+      "variedades_comunes": ["Cargamanto", "Radical", "ICA Cerinza", "Calima"],
+      "ciclo_dias": {
+        "min": 75,
+        "max": 120,
+        "promedio": 95
+      },
+      "clima_optimo": {
+        "temperatura_min": 15,
+        "temperatura_max": 27,
+        "temperatura_ideal": 21,
+        "humedad_relativa": "60-80%",
+        "precipitacion_mm": "300-500"
+      },
+      "suelo": {
+        "ph_min": 5.5,
+        "ph_max": 7.0,
+        "ph_ideal": 6.5,
+        "tipo": "Franco, bien drenado",
+        "profundidad_cm": 40
+      },
+      "riego": {
+        "frecuencia": "Cada 5-7 días",
+        "cantidad_mm": "25-35 mm/semana",
+        "metodo": "Surcos o aspersión",
+        "etapa_critica": "Floración y llenado de vainas"
+      },
+      "fertilizacion": {
+        "nitrogeno_kg_ha": "40-60 (si no hay inoculación con rizobios)",
+        "fosforo_kg_ha": "60-80",
+        "potasio_kg_ha": "40-60",
+        "momento": "100% al momento de siembra o 50% siembra + 50% a los 30 días"
+      },
+      "plagas_comunes": [
+        {
+          "nombre": "Lorito verde",
+          "nombre_cientifico": "Empoasca kraemeri",
+          "sintomas": "Enrollamiento de hojas, enanismo",
+          "control": "Variedades tolerantes, insecticidas sistémicos"
+        },
+        {
+          "nombre": "Trips",
+          "nombre_cientifico": "Trips palmi",
+          "sintomas": "Plateamiento de hojas, transmisión de virus",
+          "control": "Trampas azules, control químico"
+        }
+      ],
+      "enfermedades_comunes": [
+        {
+          "nombre": "Antracnosis",
+          "agente": "Colletotrichum lindemuthianum",
+          "sintomas": "Lesiones necróticas en tallos, hojas y vainas",
+          "control": "Semilla certificada, fungicidas preventivos"
+        },
+        {
+          "nombre": "Roya",
+          "agente": "Uromyces appendiculatus",
+          "sintomas": "Pústulas café-rojizas en hojas",
+          "control": "Variedades resistentes, fungicidas"
+        }
+      ],
+      "labores_culturales": [
+        {"etapa": "10-15 días", "actividad": "Control de malezas y raleo"},
+        {"etapa": "25-35 días", "actividad": "Aporque y monitoreo de plagas"},
+        {"etapa": "50-60 días", "actividad": "Control fitosanitario en floración"}
+      ],
+      "cosecha": {
+        "indice_madurez": "Vainas secas, grano con 14-16% humedad",
+        "rendimiento_ton_ha": "1.5-2.5"
+      }
+    },
+    {
+      "nombre": "Papa",
+      "nombre_cientifico": "Solanum tuberosum",
+      "variedades_comunes": ["Diacol Capiro", "Parda Pastusa", "ICA Única", "Criolla"],
+      "ciclo_dias": {
+        "min": 120,
+        "max": 180,
+        "promedio": 150
+      },
+      "clima_optimo": {
+        "temperatura_min": 10,
+        "temperatura_max": 20,
+        "temperatura_ideal": 15,
+        "humedad_relativa": "70-80%",
+        "precipitacion_mm": "600-800"
+      },
+      "suelo": {
+        "ph_min": 5.0,
+        "ph_max": 6.5,
+        "ph_ideal": 5.8,
+        "tipo": "Franco o franco-arenoso, suelto, bien drenado",
+        "profundidad_cm": 40
+      },
+      "riego": {
+        "frecuencia": "Cada 5-8 días según necesidad",
+        "cantidad_mm": "30-40 mm/semana",
+        "metodo": "Aspersión o goteo",
+        "etapa_critica": "Tuberización y llenado"
+      },
+      "fertilizacion": {
+        "nitrogeno_kg_ha": "120-160",
+        "fosforo_kg_ha": "100-150",
+        "potasio_kg_ha": "150-200",
+        "momento": "50% siembra + 30% a los 30 días + 20% a los 60 días"
+      },
+      "plagas_comunes": [
+        {
+          "nombre": "Polilla guatemalteca",
+          "nombre_cientifico": "Tecia solanivora",
+          "sintomas": "Galerías en tubérculos, pérdida de calidad",
+          "control": "Aporque alto, cosecha oportuna, trampas de feromonas"
+        },
+        {
+          "nombre": "Gusano blanco",
+          "nombre_cientifico": "Premnotrypes vorax",
+          "sintomas": "Perforaciones en tubérculos",
+          "control": "Rotación de cultivos, control químico del suelo"
+        }
+      ],
+      "enfermedades_comunes": [
+        {
+          "nombre": "Gota o tizón tardío",
+          "agente": "Phytophthora infestans",
+          "sintomas": "Manchas necróticas en follaje y tubérculos",
+          "control": "Fungicidas sistémicos y de contacto, variedades resistentes"
+        },
+        {
+          "nombre": "Pudrición blanda",
+          "agente": "Pectobacterium spp.",
+          "sintomas": "Pudrición acuosa de tubérculos",
+          "control": "Evitar daños mecánicos, manejo adecuado de humedad"
+        }
+      ],
+      "labores_culturales": [
+        {"etapa": "15-20 días", "actividad": "Primer aporque y control de malezas"},
+        {"etapa": "40-50 días", "actividad": "Segundo aporque y monitoreo fitosanitario"},
+        {"etapa": "90-100 días", "actividad": "Eliminación de follaje (desvitalización)"}
+      ],
+      "cosecha": {
+        "indice_madurez": "Follaje seco, piel adherida al tubérculo",
+        "rendimiento_ton_ha": "20-35"
+      }
+    },
+    {
+      "nombre": "Arroz",
+      "nombre_cientifico": "Oryza sativa",
+      "variedades_comunes": ["Fedearroz 67", "Fedearroz 174", "Fedearroz 2000"],
+      "ciclo_dias": {
+        "min": 120,
+        "max": 150,
+        "promedio": 135
+      },
+      "clima_optimo": {
+        "temperatura_min": 20,
+        "temperatura_max": 35,
+        "temperatura_ideal": 28,
+        "humedad_relativa": "70-80%",
+        "precipitacion_mm": "1200-1800"
+      },
+      "suelo": {
+        "ph_min": 5.5,
+        "ph_max": 7.0,
+        "ph_ideal": 6.0,
+        "tipo": "Franco-arcilloso, capacidad de retención de agua",
+        "profundidad_cm": 30
+      },
+      "riego": {
+        "frecuencia": "Inundación permanente o intermitente",
+        "cantidad_mm": "Lámina de agua de 5-10 cm",
+        "metodo": "Inundación controlada",
+        "etapa_critica": "Macollamiento y llenado de grano"
+      },
+      "fertilizacion": {
+        "nitrogeno_kg_ha": "100-150",
+        "fosforo_kg_ha": "50-80",
+        "potasio_kg_ha": "50-80",
+        "momento": "Fraccionado: pre-siembra, macollamiento, inicio de panícula"
+      },
+      "plagas_comunes": [
+        {
+          "nombre": "Sogata",
+          "nombre_cientifico": "Tagosodes orizicolus",
+          "sintomas": "Hojas amarillas, transmisión de virus de hoja blanca",
+          "control": "Variedades resistentes, control químico, manejo del agua"
+        },
+        {
+          "nombre": "Chinche del arroz",
+          "nombre_cientifico": "Oebalus spp.",
+          "sintomas": "Vaneamiento de granos, manchas en cariopside",
+          "control": "Monitoreo, umbral de acción, control químico"
+        }
+      ],
+      "enfermedades_comunes": [
+        {
+          "nombre": "Pyricularia o añublo",
+          "agente": "Pyricularia grisea",
+          "sintomas": "Lesiones en forma de rombo en hojas y nudos",
+          "control": "Variedades resistentes, fungicidas triazoles"
+        },
+        {
+          "nombre": "Pudrición de la vaina",
+          "agente": "Rhizoctonia solani",
+          "sintomas": "Lesiones en vainas, pudrición de tallos",
+          "control": "Manejo del agua, fungicidas"
+        }
+      ],
+      "labores_culturales": [
+        {"etapa": "20-30 días", "actividad": "Primera fertilización nitrogenada"},
+        {"etapa": "40-50 días", "actividad": "Segunda fertilización, control de malezas"},
+        {"etapa": "60-80 días", "actividad": "Inicio de panícula, manejo fitosanitario"}
+      ],
+      "cosecha": {
+        "indice_madurez": "80-85% de granos maduros, humedad 20-24%",
+        "rendimiento_ton_ha": "5-7 (arroz paddy seco)"
+      }
+    }
+  ]
+}
