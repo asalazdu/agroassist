@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { User } from '../types';
 import authService from '../services/authService';
+import eventService, { Events } from '../services/eventService';
 
 interface Props {
   onLogout: () => void;
@@ -83,6 +84,9 @@ const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
 
     setIsLoading(true);
     try {
+      // Guardar ubicación anterior para comparar
+      const oldLocation = user?.location;
+      
       const updatedUser = await authService.updateProfile(formData);
       
       console.log('✅ Usuario actualizado desde backend:', updatedUser);
@@ -109,7 +113,22 @@ const ProfileScreen: React.FC<Props> = ({ onLogout }) => {
       setUser(mappedUser);
       setFormData(mappedUser);
       setIsEditing(false);
-      Alert.alert('Éxito', 'Perfil actualizado correctamente');
+      
+      // Si cambió la ubicación o el backend lo notifica, emitir evento
+      const locationChanged = oldLocation !== mappedUser.location;
+      if (locationChanged || updatedUser.cacheInvalidated) {
+        console.log('📍 Ubicación actualizada - Notificando a otras pantallas');
+        eventService.emit(Events.LOCATION_UPDATED, { 
+          newLocation: mappedUser.location 
+        });
+      }
+      
+      Alert.alert(
+        'Éxito', 
+        locationChanged 
+          ? 'Perfil actualizado. Los datos de clima se actualizarán automáticamente.' 
+          : 'Perfil actualizado correctamente'
+      );
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Error al actualizar perfil');
     } finally {

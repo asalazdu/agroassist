@@ -12,17 +12,54 @@ import {
 } from 'react-native';
 import { WeatherData } from '../types';
 import weatherService from '../services/weatherService';
+import authService from '../services/authService';
+import eventService, { Events } from '../services/eventService';
 
 const WeatherScreen: React.FC = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [cityInput, setCityInput] = useState('');
   const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [userCity, setUserCity] = useState<string>('Bogotá');
 
   useEffect(() => {
-    // Cargar clima por defecto (Bogotá)
-    loadWeatherByCity('Bogotá');
+    loadUserLocationAndWeather();
+
+    // Suscribirse a eventos de cambio de ubicación
+    const unsubscribe = eventService.subscribe(Events.LOCATION_UPDATED, (data) => {
+      console.log('📍 Evento recibido en WeatherScreen: Ubicación actualizada', data);
+      console.log('🔄 Recargando clima con nueva ubicación...');
+      loadUserLocationAndWeather();
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
+
+  const loadUserLocationAndWeather = async () => {
+    try {
+      // Intentar obtener la ubicación del usuario desde el perfil
+      const userData = await authService.getUserProfile();
+      
+      if (userData && userData.ubicacion) {
+        // Extraer la ciudad de "Medellin, antioquia" -> "Medellin"
+        const city = userData.ubicacion.split(',')[0].trim();
+        setUserCity(city);
+        setCityInput(city);
+        console.log(`🌍 Ubicación del usuario: ${city}`);
+        loadWeatherByCity(city);
+      } else {
+        // Si no hay ubicación, usar Bogotá por defecto
+        console.log('⚠️ No se encontró ubicación del usuario, usando Bogotá por defecto');
+        loadWeatherByCity('Bogotá');
+      }
+    } catch (error) {
+      console.error('❌ Error cargando ubicación del usuario:', error);
+      // En caso de error, cargar Bogotá por defecto
+      loadWeatherByCity('Bogotá');
+    }
+  };
 
   const loadWeatherByCity = async (cityName: string) => {
     setIsLoading(true);

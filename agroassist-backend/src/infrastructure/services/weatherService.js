@@ -48,6 +48,61 @@ class WeatherService {
   }
 
   /**
+   * Obtiene el clima actual (usa el primer dato del forecast)
+   * @param {string} city - Nombre de la ciudad
+   * @param {string} country - Código del país (opcional)
+   * @returns {Promise<Object>} - Clima actual
+   */
+  async getCurrentWeather(city, country = '') {
+    try {
+      if (!this.apiKey) {
+        throw new Error('API key del clima no configurada');
+      }
+
+      const location = country ? `${city},${country}` : city;
+      const url = `${this.baseUrl}/weather?q=${location}&appid=${this.apiKey}&units=metric&lang=es`;
+
+      const response = await axios.get(url);
+      
+      if (response.status !== 200) {
+        throw new Error('Error al obtener datos del clima');
+      }
+
+      const data = response.data;
+      
+      return {
+        current: {
+          temp: data.main.temp,
+          feels_like: data.main.feels_like,
+          humidity: data.main.humidity,
+          pressure: data.main.pressure,
+          wind_speed: data.wind.speed,
+          weather: [{
+            description: data.weather[0].description,
+            icon: data.weather[0].icon,
+            main: data.weather[0].main
+          }],
+          uvi: 0, // La API gratuita no incluye UV en weather endpoint
+        },
+        hourly: data.rain ? [{ pop: data.rain['1h'] || 0 }] : [{ pop: 0 }]
+      };
+    } catch (error) {
+      if (error.response) {
+        const { status, data } = error.response;
+        if (status === 404) {
+          throw new Error('Ciudad no encontrada');
+        } else if (status === 401) {
+          throw new Error('API key del clima inválida');
+        } else {
+          throw new Error(`Error del servicio de clima: ${data.message || 'Error desconocido'}`);
+        }
+      } else {
+        throw new Error(`Error al conectar con el servicio de clima: ${error.message}`);
+      }
+    }
+  }
+
+  /**
    * Obtiene el pronóstico por coordenadas geográficas
    * @param {number} lat - Latitud
    * @param {number} lon - Longitud

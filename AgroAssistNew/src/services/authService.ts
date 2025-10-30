@@ -199,7 +199,7 @@ class AuthService {
     }
   }
 
-  async updateProfile(userData: Partial<User>): Promise<User> {
+  async updateProfile(userData: Partial<User>): Promise<User & { cacheInvalidated?: boolean }> {
     try {
       const token = await this.getStoredToken();
       
@@ -243,8 +243,16 @@ class AuthService {
       
       if (response.data.ok && response.data.user) {
         const updatedUser = response.data.user;
+        const cacheInvalidated = response.data.cacheInvalidated || false;
+        
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-        return updatedUser;
+        
+        // Si cambió la ubicación, notificar al componente
+        if (cacheInvalidated) {
+          console.log('📍 Ubicación actualizada - Los datos de clima se actualizarán');
+        }
+        
+        return { ...updatedUser, cacheInvalidated };
       } else {
         throw new Error(response.data.msg || 'Error al actualizar perfil');
       }

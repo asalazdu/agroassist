@@ -25,4 +25,23 @@ router.post('/location', validateJWT, pestController.getPestsByLocation.bind(pes
 // Obtener información detallada de una plaga
 router.post('/details', validateJWT, pestController.getDetailedPestInfo.bind(pestController));
 
+// ===== NUEVAS FUNCIONALIDADES CON IA =====
+
+// Analizar imagen de cultivo para detectar plagas/enfermedades con OpenAI Vision
+router.post('/analyze-image', validateJWT, pestController.analyzeImage.bind(pestController));
+
+// Obtener alertas de plagas basadas en clima actual
+router.post('/weather-alerts', validateJWT, pestController.getWeatherAlerts.bind(pestController));
+
+// ===== BASE DE DATOS REAL DE PLAGAS (PERENUAL API) =====
+
+// Obtener lista de plagas/enfermedades (con búsqueda y paginación)
+router.get('/database', validateJWT, pestController.getPestDatabase.bind(pestController));
+
+// Obtener detalles de una plaga específica por ID
+router.get('/database/:id', validateJWT, pestController.getPestDetails.bind(pestController));
+
+// Buscar plagas específicas para un cultivo
+router.get('/by-crop/:cropName', validateJWT, pestController.getPestsByCrop.bind(pestController));
+
 module.exports = router;

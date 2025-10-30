@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,200 +7,286 @@ import {
   ScrollView,
   SafeAreaView,
   Alert,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
-import { Recommendation } from '../types';
+import * as alertService from '../../services/alertService';
+import type { Alerta, Clima, ResumenAlertas } from '../../services/alertService';
+import eventService, { Events } from '../services/eventService';
 
 const RecommendationsScreen: React.FC = () => {
-  const [recommendations] = useState<Recommendation[]>([
-    {
-      id: '1',
-      type: 'watering',
-      title: 'Riego recomendado para maíz',
-      description: 'Basado en las condiciones climáticas actuales, se recomienda regar el cultivo de maíz en las próximas 24 horas. La humedad del suelo está por debajo del nivel óptimo.',
-      priority: 'high',
-      date: '2024-09-06',
-    },
-    {
-      id: '2',
-      type: 'fertilizing',
-      title: 'Fertilización de frijol',
-      description: 'El cultivo de frijol está en etapa de floración. Aplica fertilizante rico en fósforo para mejorar el desarrollo de flores y vainas.',
-      priority: 'medium',
-      date: '2024-09-07',
-    },
-    {
-      id: '3',
-      type: 'pest_control',
-      title: 'Monitoreo de plagas en tomate',
-      description: 'Las condiciones de humedad alta pueden favorecer la aparición de hongos en el tomate. Revisa las plantas regularmente y aplica fungicida preventivo si es necesario.',
-      priority: 'medium',
-      date: '2024-09-05',
-    },
-    {
-      id: '4',
-      type: 'harvesting',
-      title: 'Preparación para cosecha',
-      description: 'El tomate estará listo para cosechar en aproximadamente 15 días. Prepara las herramientas y contenedores necesarios.',
-      priority: 'low',
-      date: '2024-09-04',
-    },
-  ]);
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [clima, setClima] = useState<Clima | null>(null);
+  const [ubicacion, setUbicacion] = useState<string>('');
+  const [resumen, setResumen] = useState<ResumenAlertas>({
+    total: 0,
+    danger: 0,
+    warning: 0,
+    info: 0,
+    success: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [ultimaActualizacion, setUltimaActualizacion] = useState<Date>(new Date());
 
-  const getTypeIcon = (type: Recommendation['type']) => {
-    switch (type) {
-      case 'watering': return '💧';
-      case 'fertilizing': return '🌿';
-      case 'pest_control': return '🐛';
-      case 'harvesting': return '🚜';
-      default: return '📋';
+  useEffect(() => {
+    cargarAlertas();
+    
+    // Actualizar cada 5 minutos
+    const intervalo = setInterval(() => {
+      cargarAlertas();
+    }, 5 * 60 * 1000);
+
+    // Suscribirse a eventos de cambio de ubicación
+    const unsubscribe = eventService.subscribe(Events.LOCATION_UPDATED, (data) => {
+      console.log('📍 Evento recibido: Ubicación actualizada', data);
+      console.log('🔄 Recargando alertas con nueva ubicación...');
+      cargarAlertas();
+    });
+
+    return () => {
+      clearInterval(intervalo);
+      unsubscribe();
+    };
+  }, []);
+
+  const cargarAlertas = async () => {
+    try {
+      console.log('🔄 Cargando alertas climáticas...');
+      const response = await alertService.obtenerAlertas();
+      
+      if (response.ok) {
+        setAlertas(response.alertas);
+        setClima(response.clima);
+        setUbicacion(response.ubicacion);
+        setResumen(response.resumen);
+        setUltimaActualizacion(new Date());
+        console.log(`✅ ${response.alertas.length} alertas cargadas`);
+      } else {
+        console.error('Error:', response.error);
+        if (response.error?.includes('cultivos')) {
+          // Usuario sin cultivos
+          setAlertas([]);
+          setClima(null);
+        } else {
+          Alert.alert('Error', response.error || 'No se pudieron cargar las alertas');
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar alertas:', error);
+      Alert.alert('Error', 'Error de conexión al cargar alertas');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const getTypeLabel = (type: Recommendation['type']) => {
-    switch (type) {
-      case 'watering': return 'Riego';
-      case 'fertilizing': return 'Fertilización';
-      case 'pest_control': return 'Control de plagas';
-      case 'harvesting': return 'Cosecha';
-      default: return 'General';
-    }
+  const onRefresh = () => {
+    setRefreshing(true);
+    cargarAlertas();
   };
 
-  const getPriorityColor = (priority: Recommendation['priority']) => {
-    switch (priority) {
-      case 'high': return '#f44336';
-      case 'medium': return '#FF9800';
-      case 'low': return '#4CAF50';
-      default: return '#666';
-    }
-  };
-
-  const getPriorityLabel = (priority: Recommendation['priority']) => {
-    switch (priority) {
-      case 'high': return 'Alta';
-      case 'medium': return 'Media';
-      case 'low': return 'Baja';
-      default: return 'Normal';
-    }
-  };
-
-  const handleRecommendationPress = (recommendation: Recommendation) => {
+  const handleAlertPress = (alerta: Alerta) => {
+    const recomendacionesTexto = alerta.recomendaciones.length > 0
+      ? '\n\nRecomendaciones:\n' + alerta.recomendaciones.map((rec, idx) => `${idx + 1}. ${rec}`).join('\n')
+      : '';
+    
     Alert.alert(
-      `${getTypeIcon(recommendation.type)} ${recommendation.title}`,
-      recommendation.description,
-      [
-        { text: 'Marcar como completada', style: 'default' },
-        { text: 'Recordar más tarde', style: 'cancel' },
-      ]
+      `${alerta.icono} ${alerta.titulo}`,
+      `${alerta.mensaje}${recomendacionesTexto}`,
+      [{ text: 'Entendido', style: 'default' }]
     );
   };
 
-  const getRecommendationsByPriority = (priority: Recommendation['priority']) => {
-    return recommendations.filter(rec => rec.priority === priority);
+  const getAlertasPorSeveridad = (severidad: 'danger' | 'warning' | 'info' | 'success') => {
+    return alertas.filter(alerta => alerta.severidad === severidad);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const diffTime = date.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Hoy';
-    if (diffDays === 1) return 'Mañana';
-    if (diffDays === -1) return 'Ayer';
-    if (diffDays < 0) return `Hace ${Math.abs(diffDays)} días`;
-    return `En ${diffDays} días`;
+  const getSeveridadLabel = (severidad: string) => {
+    switch (severidad) {
+      case 'danger': return 'Crítica';
+      case 'warning': return 'Advertencia';
+      case 'info': return 'Información';
+      case 'success': return 'Óptima';
+      default: return 'Alerta';
+    }
   };
 
-  const renderRecommendationSection = (priority: Recommendation['priority'], title: string) => {
-    const recs = getRecommendationsByPriority(priority);
-    if (recs.length === 0) return null;
+  const renderAlertSection = (severidad: 'danger' | 'warning' | 'info' | 'success', title: string) => {
+    const alertasFiltradas = getAlertasPorSeveridad(severidad);
+    if (alertasFiltradas.length === 0) return null;
+
+    const severidadColor = alertService.getSeverityColor(severidad);
+    const severidadBgColor = alertService.getSeverityBackgroundColor(severidad);
 
     return (
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: getPriorityColor(priority) }]}>
-          {title} ({recs.length})
+        <Text style={[styles.sectionTitle, { color: severidadColor }]}>
+          {title} ({alertasFiltradas.length})
         </Text>
-        {recs.map((rec) => (
+        {alertasFiltradas.map((alerta, index) => (
           <TouchableOpacity
-            key={rec.id}
-            style={[styles.recommendationCard, { borderLeftColor: getPriorityColor(priority) }]}
-            onPress={() => handleRecommendationPress(rec)}
+            key={`${alerta.cultivo_id}-${index}`}
+            style={[styles.recommendationCard, { borderLeftColor: severidadColor }]}
+            onPress={() => handleAlertPress(alerta)}
           >
             <View style={styles.recommendationHeader}>
               <View style={styles.recommendationTitleContainer}>
                 <Text style={styles.recommendationIcon}>
-                  {getTypeIcon(rec.type)}
+                  {alerta.icono}
                 </Text>
                 <View style={styles.recommendationTitleText}>
-                  <Text style={styles.recommendationTitle}>{rec.title}</Text>
-                  <Text style={styles.recommendationType}>{getTypeLabel(rec.type)}</Text>
+                  <Text style={styles.recommendationTitle}>{alerta.titulo}</Text>
+                  <Text style={styles.recommendationType}>{alerta.cultivo_nombre}</Text>
                 </View>
               </View>
               <View style={styles.recommendationMeta}>
-                <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(priority) + '20' }]}>
-                  <Text style={[styles.priorityText, { color: getPriorityColor(priority) }]}>
-                    {getPriorityLabel(priority)}
+                <View style={[styles.priorityBadge, { backgroundColor: severidadBgColor }]}>
+                  <Text style={[styles.priorityText, { color: severidadColor }]}>
+                    {getSeveridadLabel(alerta.severidad)}
                   </Text>
                 </View>
-                <Text style={styles.dateText}>{formatDate(rec.date)}</Text>
               </View>
             </View>
             <Text style={styles.recommendationDescription} numberOfLines={3}>
-              {rec.description}
+              {alerta.mensaje}
             </Text>
+            {alerta.recomendaciones.length > 0 && (
+              <Text style={styles.recommendationsCount}>
+                📋 {alerta.recomendaciones.length} recomendación(es)
+              </Text>
+            )}
           </TouchableOpacity>
         ))}
       </View>
     );
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loadingText}>Cargando alertas climáticas...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4CAF50']} />
+        }
+      >
         <View style={styles.header}>
-          <Text style={styles.title}>💡 Recomendaciones</Text>
-          <Text style={styles.subtitle}>Consejos personalizados para tus cultivos</Text>
+          <Text style={styles.title}>🌤️ Alertas Climáticas</Text>
+          <Text style={styles.subtitle}>Recomendaciones basadas en el clima actual</Text>
+          {ubicacion && (
+            <Text style={styles.locationText}>📍 {ubicacion}</Text>
+          )}
+          <Text style={styles.updateText}>
+            Última actualización: {alertService.formatearFechaRelativa(ultimaActualizacion.toISOString())}
+          </Text>
         </View>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>📊 Resumen de tareas</Text>
-          <View style={styles.summaryStats}>
-            <View style={styles.summaryItem}>
-              <Text style={[styles.summaryNumber, { color: '#f44336' }]}>
-                {getRecommendationsByPriority('high').length}
-              </Text>
-              <Text style={styles.summaryLabel}>Prioridad alta</Text>
+        {clima && (
+          <View style={styles.weatherCard}>
+            <Text style={styles.weatherTitle}>☀️ Clima Actual</Text>
+            <View style={styles.weatherInfo}>
+              <View style={styles.weatherItem}>
+                <Text style={styles.weatherIcon}>🌡️</Text>
+                <Text style={styles.weatherValue}>{clima.temperatura}°C</Text>
+                <Text style={styles.weatherLabel}>Temperatura</Text>
+              </View>
+              <View style={styles.weatherItem}>
+                <Text style={styles.weatherIcon}>💧</Text>
+                <Text style={styles.weatherValue}>{clima.humedad}%</Text>
+                <Text style={styles.weatherLabel}>Humedad</Text>
+              </View>
+              <View style={styles.weatherItem}>
+                <Text style={styles.weatherIcon}>💨</Text>
+                <Text style={styles.weatherValue}>{clima.viento} m/s</Text>
+                <Text style={styles.weatherLabel}>Viento</Text>
+              </View>
             </View>
-            <View style={styles.summaryItem}>
-              <Text style={[styles.summaryNumber, { color: '#FF9800' }]}>
-                {getRecommendationsByPriority('medium').length}
+            {clima.precipitacion && clima.precipitacion > 1 && (
+              <Text style={styles.rainAlert}>
+                🌧️ Precipitación actual: {clima.precipitacion} mm
               </Text>
-              <Text style={styles.summaryLabel}>Prioridad media</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={[styles.summaryNumber, { color: '#4CAF50' }]}>
-                {getRecommendationsByPriority('low').length}
-              </Text>
-              <Text style={styles.summaryLabel}>Prioridad baja</Text>
-            </View>
+            )}
           </View>
-        </View>
+        )}
 
-        {renderRecommendationSection('high', '🚨 Prioridad Alta')}
-        {renderRecommendationSection('medium', '⚠️ Prioridad Media')}
-        {renderRecommendationSection('low', '📝 Prioridad Baja')}
+        {alertas.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyIcon}>🌱</Text>
+            <Text style={styles.emptyTitle}>Sin alertas activas</Text>
+            <Text style={styles.emptyText}>
+              {clima 
+                ? 'Tus cultivos están en condiciones óptimas. ¡Sigue así!'
+                : 'Agrega cultivos para recibir recomendaciones personalizadas.'}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>📊 Resumen de Alertas</Text>
+              <View style={styles.summaryStats}>
+                {resumen.danger > 0 && (
+                  <View style={styles.summaryItem}>
+                    <Text style={[styles.summaryNumber, { color: alertService.getSeverityColor('danger') }]}>
+                      {resumen.danger}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Críticas</Text>
+                  </View>
+                )}
+                {resumen.warning > 0 && (
+                  <View style={styles.summaryItem}>
+                    <Text style={[styles.summaryNumber, { color: alertService.getSeverityColor('warning') }]}>
+                      {resumen.warning}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Advertencias</Text>
+                  </View>
+                )}
+                {resumen.info > 0 && (
+                  <View style={styles.summaryItem}>
+                    <Text style={[styles.summaryNumber, { color: alertService.getSeverityColor('info') }]}>
+                      {resumen.info}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Información</Text>
+                  </View>
+                )}
+                {resumen.success > 0 && (
+                  <View style={styles.summaryItem}>
+                    <Text style={[styles.summaryNumber, { color: alertService.getSeverityColor('success') }]}>
+                      {resumen.success}
+                    </Text>
+                    <Text style={styles.summaryLabel}>Óptimas</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {renderAlertSection('danger', '🚨 Alertas Críticas')}
+            {renderAlertSection('warning', '⚠️ Advertencias')}
+            {renderAlertSection('info', 'ℹ️ Información')}
+            {renderAlertSection('success', '✅ Condiciones Óptimas')}
+          </>
+        )}
 
         <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>🌟 Consejos generales</Text>
+          <Text style={styles.tipsTitle}>🌟 Consejos</Text>
           <Text style={styles.tipText}>
-            • Revisa tus recomendaciones diariamente para mantener tus cultivos saludables
+            • Las alertas se actualizan automáticamente cada 5 minutos
           </Text>
           <Text style={styles.tipText}>
-            • Las recomendaciones se actualizan basándose en el clima y el estado de tus cultivos
+            • Desliza hacia abajo para actualizar manualmente
           </Text>
           <Text style={styles.tipText}>
-            • Marca las tareas como completadas para un mejor seguimiento
+            • Toca una alerta para ver las recomendaciones detalladas
           </Text>
         </View>
       </ScrollView>
@@ -216,6 +302,16 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
   header: {
     alignItems: 'center',
     marginBottom: 20,
@@ -230,6 +326,93 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+    marginBottom: 4,
+  },
+  locationText: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  updateText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 8,
+  },
+  weatherCard: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  weatherTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 16,
+  },
+  weatherInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  weatherItem: {
+    alignItems: 'center',
+  },
+  weatherIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  weatherValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  weatherLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  rainAlert: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#1976D2',
+    fontWeight: '600',
+  },
+  emptyCard: {
+    backgroundColor: 'white',
+    padding: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   summaryCard: {
     backgroundColor: 'white',
@@ -251,10 +434,12 @@ const styles = StyleSheet.create({
   summaryStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   summaryItem: {
     alignItems: 'center',
-    flex: 1,
+    minWidth: '22%',
+    marginBottom: 8,
   },
   summaryNumber: {
     fontSize: 24,
@@ -314,7 +499,6 @@ const styles = StyleSheet.create({
   recommendationType: {
     fontSize: 12,
     color: '#666',
-    textTransform: 'uppercase',
     fontWeight: '600',
   },
   recommendationMeta: {
@@ -330,14 +514,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  dateText: {
-    fontSize: 12,
-    color: '#666',
-  },
   recommendationDescription: {
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+  },
+  recommendationsCount: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '600',
   },
   tipsCard: {
     backgroundColor: '#E8F5E8',

@@ -10,6 +10,9 @@ const weatherRoutes = require('./interfaces/routes/weather.routes');
 const marketPricesRoutes = require('./interfaces/routes/marketPrices.routes');
 const colombianPestRoutes = require('./interfaces/routes/colombianPest.routes');
 const cultivoRoutes = require('./interfaces/routes/cultivo.routes');
+const forumRoutes = require('./interfaces/routes/forum.routes');
+const alertRoutes = require('./interfaces/routes/alert.routes');
+const marketPriceRoutes = require('./interfaces/routes/marketPrice.routes');
 
 // Middlewares
 app.use(express.json());
@@ -22,6 +25,9 @@ app.use('/api/plagas', colombianPestRoutes); // Rutas en español para Colombia
 app.use('/api/weather', weatherRoutes);
 app.use('/api/market', marketPricesRoutes);
 app.use('/api/cultivos', cultivoRoutes);
+app.use('/api/forum', forumRoutes); // Foro comunitario
+app.use('/api/alerts', alertRoutes); // Alertas climáticas
+app.use('/api/market-prices', marketPriceRoutes); // Precios de mercado con OpenAI
 
 // Endpoint de prueba de base de datos
 app.get('/ping', async (req, res) => {

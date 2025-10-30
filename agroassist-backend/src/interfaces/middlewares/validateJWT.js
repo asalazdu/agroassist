@@ -8,36 +8,30 @@ const userRepository = require('../../infrastructure/database/supabase/userRepos
  */
 const validateJWT = async (req, res = response, next) => {
   try {
-    // Obtener token del header Authorization
+    // Obtener token del header Authorization o x-token
     const authHeader = req.header('Authorization');
+    const xToken = req.header('x-token');
     
-    if (!authHeader) {
+    let token = null;
+    
+    // Prioridad 1: x-token (usado por la app móvil)
+    if (xToken) {
+      token = xToken;
+      console.log('🔑 Token recibido desde x-token header');
+    }
+    // Prioridad 2: Authorization Bearer (estándar REST)
+    else if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remover 'Bearer '
+      console.log('🔑 Token recibido desde Authorization Bearer');
+    }
+    
+    if (!token) {
+      console.log('❌ No se encontró token en headers');
       return res.status(401).json({
         success: false,
         message: 'Token de acceso requerido',
         error: 'No se proporcionó token de autorización',
-        help: 'Incluye el header: Authorization: Bearer <tu_token>'
-      });
-    }
-
-    // Verificar formato Bearer token
-    if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Formato de token inválido',
-        error: 'El token debe tener formato: Bearer <token>',
-        help: 'Incluye el header: Authorization: Bearer <tu_token>'
-      });
-    }
-
-    // Extraer el token
-    const token = authHeader.substring(7); // Remover 'Bearer '
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token vacío',
-        error: 'No se proporcionó token después de Bearer'
+        help: 'Incluye el header: x-token: <tu_token> o Authorization: Bearer <tu_token>'
       });
     }
 

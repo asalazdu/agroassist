@@ -246,6 +246,162 @@ class PestService {
     
     return true;
   }
+
+  /**
+   * Obtener lista de plagas desde Perenual API (Backend)
+   * @param query - Término de búsqueda opcional
+   * @param page - Número de página
+   */
+  async getPestDatabaseFromAPI(query?: string, page: number = 1): Promise<any> {
+    try {
+      const token = await this.getAuthToken();
+      
+      const params: any = { page };
+      if (query) {
+        params.query = query;
+      }
+
+      const response = await axios.get(`${API_CONFIG.BACKEND_URL}/pests/database`, {
+        params,
+        headers: {
+          'x-token': token
+        },
+        timeout: 15000
+      });
+
+      if (response.data.success) {
+        console.log(`✅ ${response.data.plagas.length} plagas obtenidas de API`);
+        return {
+          total: response.data.total,
+          currentPage: response.data.currentPage,
+          lastPage: response.data.lastPage,
+          plagas: response.data.plagas
+        };
+      }
+
+      throw new Error('Error al obtener plagas de la API');
+
+    } catch (error: any) {
+      console.error('❌ Error obteniendo plagas de API:', error.message);
+      
+      // Si falla, retornar datos mock
+      const mockPests = this.getMockPests();
+      return {
+        total: mockPests.length,
+        currentPage: 1,
+        lastPage: 1,
+        plagas: mockPests.map(pest => ({
+          id: pest.id,
+          nombre: pest.name,
+          nombreCientifico: pest.scientificName,
+          tipo: 'insecto',
+          descripcion: pest.description,
+          sintomas: pest.symptoms,
+          tratamiento: pest.treatment.join('. '),
+          prevencion: pest.prevention,
+          cultivos: pest.affectedCrops,
+          gravedad: pest.severity,
+          fuente: 'Base de datos local'
+        }))
+      };
+    }
+  }
+
+  /**
+   * Obtener detalles de una plaga específica por ID
+   */
+  async getPestDetailsFromAPI(pestId: string): Promise<any> {
+    try {
+      const token = await this.getAuthToken();
+
+      const response = await axios.get(`${API_CONFIG.BACKEND_URL}/pests/database/${pestId}`, {
+        headers: {
+          'x-token': token
+        },
+        timeout: 10000
+      });
+
+      if (response.data.success) {
+        console.log(`✅ Detalles de plaga ${pestId} obtenidos`);
+        return response.data.plaga;
+      }
+
+      throw new Error('Plaga no encontrada');
+
+    } catch (error: any) {
+      console.error('❌ Error obteniendo detalles de plaga:', error.message);
+      
+      // Fallback a datos mock
+      const mockPests = this.getMockPests();
+      const mockPest = mockPests.find(p => p.id === pestId);
+      
+      if (mockPest) {
+        return {
+          id: mockPest.id,
+          nombre: mockPest.name,
+          nombreCientifico: mockPest.scientificName,
+          descripcion: mockPest.description,
+          sintomas: mockPest.symptoms,
+          tratamiento: mockPest.treatment.join('. '),
+          prevencion: mockPest.prevention,
+          cultivos: mockPest.affectedCrops,
+          gravedad: mockPest.severity
+        };
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Buscar plagas específicas para un cultivo
+   */
+  async getPestsByCropFromAPI(cropName: string): Promise<any[]> {
+    try {
+      const token = await this.getAuthToken();
+
+      const response = await axios.get(`${API_CONFIG.BACKEND_URL}/pests/by-crop/${cropName}`, {
+        headers: {
+          'x-token': token
+        },
+        timeout: 15000
+      });
+
+      if (response.data.success) {
+        console.log(`✅ ${response.data.cantidad} plagas para ${cropName}`);
+        return response.data.plagas;
+      }
+
+      throw new Error('Error al buscar plagas por cultivo');
+
+    } catch (error: any) {
+      console.error('❌ Error buscando plagas por cultivo:', error.message);
+      
+      // Fallback
+      const allPests = await this.getPestsByCrop(cropName);
+      return allPests.map(pest => ({
+        id: pest.id,
+        nombre: pest.name,
+        nombreCientifico: pest.scientificName,
+        descripcion: pest.description,
+        cultivos: pest.affectedCrops
+      }));
+    }
+  }
+
+  /**
+   * Obtener token de autenticación
+   */
+  private async getAuthToken(): Promise<string> {
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const token = await AsyncStorage.getItem('token');
+    
+    if (!token) {
+      throw new Error('No hay sesión activa');
+    }
+    
+    return token;
+  }
 }
 
 export default PestService.getInstance();

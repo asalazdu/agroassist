@@ -9,6 +9,7 @@ const userRepository = require('../../infrastructure/database/supabase/userRepos
 const hashService = require('../../infrastructure/services/hash.service');
 const emailService = require('../../infrastructure/services/emailService');
 const tokenService = require('../../infrastructure/shared/utils/token');
+const cacheService = require('../../infrastructure/services/cacheService');
 
 const register = async (req, res) => {
   const { nombre_completo, correo, contrasena, telefono, ubicacion, tamaño_finca } = req.body;
@@ -152,12 +153,23 @@ const updateProfile = async (req, res) => {
     console.log('📝 Actualizando perfil usuario ID:', userId);
     console.log('   Datos:', JSON.stringify(profileData, null, 2));
 
+    // Verificar si cambió la ubicación
+    const ubicacionCambiada = profileData.ubicacion !== undefined || 
+                              profileData.location !== undefined;
+
     const updatedUser = await updateUserProfile(userId, profileData);
+
+    // Si cambió la ubicación, invalidar todo el caché relacionado con clima
+    if (ubicacionCambiada) {
+      console.log('📍 Ubicación actualizada - Invalidando caché de clima y alertas');
+      cacheService.invalidateUserCache(userId);
+    }
 
     res.status(200).json({
       ok: true,
       msg: 'Perfil actualizado correctamente',
-      user: updatedUser
+      user: updatedUser,
+      cacheInvalidated: ubicacionCambiada // Informar al frontend que debe recargar datos
     });
   } catch (error) {
     console.error('❌ Error actualizando perfil:', error.message);

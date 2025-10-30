@@ -23,9 +23,10 @@ import HomeScreen from './src/screens/HomeScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import WeatherScreen from './src/screens/WeatherScreen';
 import CropsScreen from './src/screens/CropsScreen';
-import PestsScreen from './src/screens/PestsScreen';
+import PestsScreenWithAI from './src/screens/PestsScreenWithAI'; // Nueva pantalla con análisis de IA
 import MarketPricesScreen from './src/screens/MarketPricesScreen';
 import RecommendationsScreen from './src/screens/RecommendationsScreen';
+import ForumScreen from './src/screens/ForumScreen'; // Foro Comunitario
 
 // Importar tipos
 import { RootStackParamList, User } from './src/types';
@@ -121,8 +122,22 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
         }}
       />
       <Tab.Screen 
+        name="Forum" 
+        component={ForumScreen}
+        options={{
+          title: 'Foro',
+          tabBarIcon: ({ color, size }) => (
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: size ? size - 4 : 20, color }}>💬</Text>
+            </View>
+          ),
+          headerTitle: 'Foro Comunitario',
+          headerShown: false, // El ForumScreen tiene su propio header
+        }}
+      />
+      <Tab.Screen 
         name="Pests" 
-        component={PestsScreen}
+        component={PestsScreenWithAI}
         options={{
           title: 'Plagas',
           tabBarIcon: ({ color, size }) => (
@@ -130,7 +145,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
               <Text style={{ fontSize: size ? size - 4 : 20, color }}>🐛</Text>
             </View>
           ),
-          headerTitle: 'Control de Plagas',
+          headerTitle: 'Control de Plagas con IA',
         }}
       />
       <Tab.Screen 

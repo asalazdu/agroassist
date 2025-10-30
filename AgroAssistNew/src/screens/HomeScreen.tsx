@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,13 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, WeatherData } from '../types';
+import authService from '../services/authService';
+import weatherService from '../services/weatherService';
+import cultivoService from '../services/cultivoService';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -17,6 +21,66 @@ interface Props {
 }
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [userCity, setUserCity] = useState<string>('');
+  const [cropsCount, setCropsCount] = useState<number>(0);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(true);
+  const [userName, setUserName] = useState<string>('');
+
+  useEffect(() => {
+    loadHomeData();
+  }, []);
+
+  const loadHomeData = async () => {
+    try {
+      // Cargar datos del usuario
+      const userData = await authService.getUserProfile();
+      
+      if (userData) {
+        // Obtener nombre del usuario
+        setUserName(userData.nombre_completo || 'Agricultor');
+        
+        // Extraer ciudad de la ubicación
+        if (userData.ubicacion) {
+          const city = userData.ubicacion.split(',')[0].trim();
+          setUserCity(city);
+          
+          // Cargar clima de esa ciudad
+          try {
+            const weather = await weatherService.getWeatherByCity(city);
+            setWeatherData(weather);
+          } catch (error) {
+            console.error('❌ Error cargando clima:', error);
+          }
+        }
+        
+        // Cargar cantidad de cultivos
+        try {
+          const cultivos = await cultivoService.getCultivos();
+          setCropsCount(cultivos.length);
+        } catch (error) {
+          console.error('❌ Error cargando cultivos:', error);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error cargando datos del home:', error);
+    } finally {
+      setIsLoadingWeather(false);
+    }
+  };
+
+  const getWeatherIcon = (icon?: string) => {
+    if (!icon) return '🌤️';
+    const iconMap: { [key: string]: string } = {
+      '01d': '☀️', '01n': '🌙', '02d': '⛅', '02n': '☁️',
+      '03d': '☁️', '03n': '☁️', '04d': '☁️', '04n': '☁️',
+      '09d': '🌧️', '09n': '🌧️', '10d': '🌦️', '10n': '🌧️',
+      '11d': '⛈️', '11n': '⛈️', '13d': '❄️', '13n': '❄️',
+      '50d': '🌫️', '50n': '🌫️'
+    };
+    return iconMap[icon] || '🌤️';
+  };
+
   const menuItems = [
     {
       title: '🌤️ Clima',
@@ -62,23 +126,40 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.title}>🌱 AgroAssist</Text>
           <Text style={styles.subtitle}>Tu asistente inteligente para agricultura</Text>
-          <Text style={styles.welcome}>¡Bienvenido de vuelta!</Text>
+          <Text style={styles.welcome}>¡Bienvenido {userName}!</Text>
+          {userCity && (
+            <Text style={styles.locationText}>📍 {userCity}</Text>
+          )}
         </View>
 
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>25°C</Text>
-            <Text style={styles.statLabel}>Temperatura</Text>
+        {isLoadingWeather ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4CAF50" />
+            <Text style={styles.loadingText}>Cargando datos...</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>65%</Text>
-            <Text style={styles.statLabel}>Humedad</Text>
+        ) : (
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <Text style={styles.statIcon}>{getWeatherIcon(weatherData?.current.icon)}</Text>
+              <Text style={styles.statNumber}>
+                {weatherData ? Math.round(weatherData.current.temperature) : '--'}°C
+              </Text>
+              <Text style={styles.statLabel}>Temperatura</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statIcon}>💧</Text>
+              <Text style={styles.statNumber}>
+                {weatherData ? weatherData.current.humidity : '--'}%
+              </Text>
+              <Text style={styles.statLabel}>Humedad</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statIcon}>🌱</Text>
+              <Text style={styles.statNumber}>{cropsCount}</Text>
+              <Text style={styles.statLabel}>Cultivos</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>3</Text>
-            <Text style={styles.statLabel}>Cultivos</Text>
-          </View>
-        </View>
+        )}
 
         <View style={styles.menuContainer}>
           <Text style={styles.menuTitle}>🚀 Funcionalidades</Text>
@@ -140,6 +221,22 @@ const styles = StyleSheet.create({
     color: '#666',
     fontWeight: '600',
   },
+  locationText: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '500',
+    marginTop: 4,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+  },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -157,6 +254,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  statIcon: {
+    fontSize: 28,
+    marginBottom: 8,
   },
   statNumber: {
     fontSize: 24,
