@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, View, StyleSheet, Text, SafeAreaView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-gesture-handler';
 
@@ -33,6 +33,15 @@ import { RootStackParamList, User } from './src/types';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
+
+// Wrapper para agregar padding superior por el menú
+const ScreenWrapper = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <SafeAreaView style={{ flex: 1, paddingTop: 90, backgroundColor: '#f5f5f5' }}>
+      {children}
+    </SafeAreaView>
+  );
+}
 
 // Navegador de autenticación con Welcome
 function AuthStack({ onLoginSuccess }: { onLoginSuccess: () => void }) {
@@ -69,9 +78,23 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           backgroundColor: 'white',
           borderTopWidth: 1,
           borderTopColor: '#e0e0e0',
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          position: 'absolute',
+          top: 40,
+          left: 0,
+          right: 0,
+          height: 50,
+          elevation: 4,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
         },
         headerStyle: {
           backgroundColor: '#4CAF50',
@@ -80,11 +103,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
+        headerShown: false,
       }}
     >
       <Tab.Screen 
         name="Home" 
-        component={HomeScreen}
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, size }) => (
@@ -94,10 +117,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           ),
           headerTitle: '🌱 AgroAssist',
         }}
-      />
+      >
+        {(props) => <ScreenWrapper><HomeScreen {...props} /></ScreenWrapper>}
+      </Tab.Screen>
       <Tab.Screen 
         name="Weather" 
-        component={WeatherScreen}
         options={{
           title: 'Clima',
           tabBarIcon: ({ color, size }) => (
@@ -107,10 +131,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           ),
           headerTitle: 'Clima Agrícola',
         }}
-      />
+      >
+        {() => <ScreenWrapper><WeatherScreen /></ScreenWrapper>}
+      </Tab.Screen>
       <Tab.Screen 
         name="Crops" 
-        component={CropsScreen}
         options={{
           title: 'Cultivos',
           tabBarIcon: ({ color, size }) => (
@@ -120,10 +145,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           ),
           headerTitle: 'Mis Cultivos',
         }}
-      />
+      >
+        {() => <ScreenWrapper><CropsScreen /></ScreenWrapper>}
+      </Tab.Screen>
       <Tab.Screen 
         name="Forum" 
-        component={ForumScreen}
         options={{
           title: 'Foro',
           tabBarIcon: ({ color, size }) => (
@@ -132,12 +158,13 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
             </View>
           ),
           headerTitle: 'Foro Comunitario',
-          headerShown: false, // El ForumScreen tiene su propio header
+          headerShown: false,
         }}
-      />
+      >
+        {() => <ScreenWrapper><ForumScreen /></ScreenWrapper>}
+      </Tab.Screen>
       <Tab.Screen 
         name="Pests" 
-        component={PestsScreenWithAI}
         options={{
           title: 'Plagas',
           tabBarIcon: ({ color, size }) => (
@@ -147,10 +174,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           ),
           headerTitle: 'Control de Plagas con IA',
         }}
-      />
+      >
+        {() => <ScreenWrapper><PestsScreenWithAI /></ScreenWrapper>}
+      </Tab.Screen>
       <Tab.Screen 
         name="MarketPrices" 
-        component={MarketPricesScreen}
         options={{
           title: 'Precios',
           tabBarIcon: ({ color, size }) => (
@@ -160,10 +188,11 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           ),
           headerTitle: 'Precios del Mercado',
         }}
-      />
+      >
+        {() => <ScreenWrapper><MarketPricesScreen /></ScreenWrapper>}
+      </Tab.Screen>
       <Tab.Screen 
         name="Recommendations" 
-        component={RecommendationsScreen}
         options={{
           title: 'Consejos',
           tabBarIcon: ({ color, size }) => (
@@ -173,7 +202,9 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           ),
           headerTitle: 'Recomendaciones',
         }}
-      />
+      >
+        {() => <ScreenWrapper><RecommendationsScreen /></ScreenWrapper>}
+      </Tab.Screen>
       <Tab.Screen 
         name="Profile"
         options={{
@@ -186,7 +217,7 @@ function MainTabs({ onLogout }: { onLogout: () => void }) {
           headerTitle: 'Mi Perfil',
         }}
       >
-        {() => <ProfileScreen onLogout={onLogout} />}
+        {() => <ScreenWrapper><ProfileScreen onLogout={onLogout} /></ScreenWrapper>}
       </Tab.Screen>
     </Tab.Navigator>
     

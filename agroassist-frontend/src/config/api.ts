@@ -6,9 +6,14 @@ export const API_CONFIG = {
   // Para Android emulador, usar 10.0.2.2 que mapea a localhost de la máquina host
   // Para iOS simulator, usar localhost
   // Para dispositivo físico, usar la IP de tu computadora (ej: 192.168.1.X)
-  BACKEND_URL: Platform.OS === 'android' 
-    ? 'http://10.0.2.2:3000/api'  // Android emulador
-    : 'http://localhost:3000/api',  // iOS o web
+  
+  // 📱 CONFIGURADO PARA CELULAR FÍSICO CON EXPO GO
+  BACKEND_URL: 'http://192.168.1.10:3000/api',  // Tu IP local
+  
+  // Para volver al emulador, cambia a:
+  // BACKEND_URL: Platform.OS === 'android' 
+  //   ? 'http://10.0.2.2:3000/api'  // Android emulador
+  //   : 'http://localhost:3000/api',  // iOS o web
   
   // API Key de OpenWeatherMap - USAR VARIABLE DE ENTORNO
   WEATHER_API_KEY: process.env.EXPO_PUBLIC_WEATHER_API_KEY || '',
@@ -18,7 +23,7 @@ export const API_CONFIG = {
   OPENAI_API_KEY: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
   
   // Configuraciones por defecto
-  DEFAULT_CITY: 'Bogotá',
+  DEFAULT_CITY: 'Medellin',
   DEFAULT_COUNTRY: 'CO',
   
   // Timeouts

@@ -8,6 +8,13 @@ class PestAnalysisService {
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY;
     this.openaiBaseUrl = 'https://api.openai.com/v1/chat/completions';
+    
+    // Log para verificar API key
+    if (this.openaiApiKey) {
+      console.log('✅ OpenAI API Key cargada para análisis de imágenes:', this.openaiApiKey.substring(0, 20) + '...');
+    } else {
+      console.warn('⚠️ OpenAI API Key NO configurada para análisis de imágenes');
+    }
   }
 
   /**
@@ -19,7 +26,14 @@ class PestAnalysisService {
   async analyzeCropImage(imageBase64, cropName = null) {
     try {
       if (!this.openaiApiKey) {
-        throw new Error('OpenAI API key no configurada');
+        console.error('❌ OpenAI API key no configurada');
+        throw new Error('OpenAI API key no configurada. Verifica la variable OPENAI_API_KEY en el archivo .env');
+      }
+
+      console.log('🔍 Iniciando análisis de imagen con OpenAI Vision (gpt-4o)...');
+      console.log('📸 Tamaño de imagen base64:', imageBase64.length, 'caracteres');
+      if (cropName) {
+        console.log('🌱 Cultivo especificado:', cropName);
       }
 
       // Preparar el prompt especializado para análisis agrícola
@@ -62,6 +76,7 @@ Debes responder SIEMPRE en formato JSON con la siguiente estructura:
         : `Analiza esta imagen de cultivo. Primero identifica qué tipo de planta es, luego identifica plagas, enfermedades o cualquier problema visible. Sé específico y detallado en tu análisis.`;
 
       // Llamada a OpenAI Vision API
+      console.log('📡 Enviando solicitud a OpenAI Vision API...');
       const response = await axios.post(
         this.openaiBaseUrl,
         {
@@ -99,6 +114,9 @@ Debes responder SIEMPRE en formato JSON con la siguiente estructura:
           timeout: 60000 // 60 segundos timeout
         }
       );
+
+      console.log('✅ Respuesta recibida de OpenAI');
+      console.log('📊 Tokens utilizados:', response.data.usage?.total_tokens || 0);
 
       // Extraer y parsear la respuesta
       const content = response.data.choices[0].message.content;
