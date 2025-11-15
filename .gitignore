@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .env
+guia del proyecto/envB.txt
+guia del proyecto/envF.txt
 
 
 .DS_Store
